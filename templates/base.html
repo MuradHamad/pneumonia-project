@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}PneuDx{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ["Inter", "system-ui", "sans-serif"] },
+                    colors: {
+                        primary: "#1E40AF",
+                        "primary-hover": "#1E3A8A",
+                        "primary-light": "#DBEAFE",
+                        surface: "#FFFFFF",
+                        background: "#F8FAFC",
+                        border: "#E2E8F0",
+                        "text-primary": "#0F172A",
+                        "text-secondary": "#64748B",
+                        "text-muted": "#94A3B8",
+                        success: "#16A34A",
+                        warning: "#F59E0B",
+                        danger: "#DC2626",
+                        info: "#0891B2",
+                    },
+                },
+            },
+        };
+    </script>
+</head>
+<body class="font-sans bg-background text-text-primary min-h-screen">
+
+<div class="flex min-h-screen">
+
+    {# Sidebar shell #}
+    <aside class="fixed inset-y-0 left-0 w-60 bg-surface border-r border-border flex flex-col">
+        <div class="p-6 border-b border-border">
+            <div class="flex items-center gap-2">
+                <i data-lucide="activity" class="w-6 h-6 text-primary"></i>
+                <span class="text-lg font-semibold">PneuDx</span>
+            </div>
+            {% if user.is_authenticated %}
+                <div class="mt-4 text-sm">
+                    <div class="font-medium">{{ user.get_full_name|default:user.username }}</div>
+                    <div class="text-text-secondary text-xs uppercase tracking-wide">{{ user.role|default:"User" }}</div>
+                </div>
+            {% endif %}
+        </div>
+
+        <nav class="flex-1 p-3 space-y-1">
+            {% block sidebar_nav %}{% endblock %}
+        </nav>
+
+        <div class="p-3 border-t border-border space-y-1">
+            {% block sidebar_bottom %}{% endblock %}
+        </div>
+    </aside>
+
+    {# Main content area #}
+    <div class="flex-1 ml-60 flex flex-col">
+        <header class="h-16 bg-surface border-b border-border px-8 flex items-center justify-between">
+            <h1 class="text-xl font-semibold">{% block page_title %}Dashboard{% endblock %}</h1>
+            <div class="flex items-center gap-3">
+                {% block page_actions %}{% endblock %}
+            </div>
+        </header>
+
+        <main class="flex-1 p-8 bg-background">
+            <div class="max-w-7xl mx-auto">
+                {% if messages %}
+                    <div class="mb-4 space-y-2">
+                        {% for message in messages %}
+                            <div class="px-4 py-2 rounded-lg bg-primary-light text-primary text-sm">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>lucide.createIcons();</script>
+</body>
+</html>
