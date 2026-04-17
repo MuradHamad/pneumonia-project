@@ -11,6 +11,9 @@ dashboard_view = login_required(TemplateView.as_view(template_name="dashboard.ht
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounts/", include("apps.accounts.urls")),
+    path("patients/", include("apps.patients.urls")),
+    path("cases/", include("apps.cases.urls")),
+    path("reports/", include("apps.reports.urls")),
     path("", dashboard_view, name="dashboard"),
 ]
 

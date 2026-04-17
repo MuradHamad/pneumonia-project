@@ -1,0 +1,24 @@
+{% comment %}
+Stat card component.
+Params:
+  icon   — Lucide icon name (e.g. "users")
+  label  — small uppercase label
+  value  — the main number/value
+  tone   — primary | info | success | warning | danger (background tint for icon)
+{% endcomment %}
+{% with tone=tone|default:"primary" %}
+<div class="bg-surface rounded-xl border border-border p-6 shadow-sm flex items-start justify-between gap-4">
+    <div class="min-w-0">
+        <div class="text-xs font-medium uppercase tracking-wide text-text-secondary">{{ label }}</div>
+        <div class="mt-2 text-3xl font-bold text-text-primary">{{ value }}</div>
+    </div>
+    <div class="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center
+        {% if tone == 'warning' %}bg-amber-100 text-warning
+        {% elif tone == 'success' %}bg-green-100 text-success
+        {% elif tone == 'danger' %}bg-red-100 text-danger
+        {% elif tone == 'info' %}bg-cyan-100 text-info
+        {% else %}bg-primary-light text-primary{% endif %}">
+        <i data-lucide="{{ icon }}" class="w-5 h-5"></i>
+    </div>
+</div>
+{% endwith %}

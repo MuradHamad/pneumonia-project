@@ -6,6 +6,7 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 
+from .decorators import admin_required
 from .forms import EmailAuthenticationForm, StyledPasswordChangeForm
 
 
@@ -41,6 +42,22 @@ def change_password_view(request):
     else:
         form = StyledPasswordChangeForm(request.user)
     return render(request, "accounts/change_password.html", {"form": form})
+
+
+@admin_required
+def admin_clinicians(request):
+    return render(request, "coming_soon.html", {
+        "page_title": "Clinicians",
+        "description": "Admin: manage clinician accounts. Available in Phase 8.",
+    })
+
+
+@admin_required
+def admin_overview(request):
+    return render(request, "coming_soon.html", {
+        "page_title": "System Overview",
+        "description": "Admin: system-wide stats. Available in Phase 8.",
+    })
 
 
 @login_required

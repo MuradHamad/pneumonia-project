@@ -1,3 +1,4 @@
+{% load nav %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -41,13 +42,15 @@
 
 <div class="flex min-h-screen">
 
-    {# Sidebar shell #}
-    <aside class="fixed inset-y-0 left-0 w-60 bg-surface border-r border-border flex flex-col">
+    {# ===== Sidebar ===== #}
+    <aside class="fixed inset-y-0 left-0 w-60 bg-surface border-r border-border flex flex-col z-10">
+
+        {# Logo + user info #}
         <div class="p-6 border-b border-border">
-            <div class="flex items-center gap-2">
+            <a href="{% url 'dashboard' %}" class="flex items-center gap-2">
                 <i data-lucide="activity" class="w-6 h-6 text-primary"></i>
                 <span class="text-lg font-semibold">PneuDx</span>
-            </div>
+            </a>
             {% if user.is_authenticated %}
                 <div class="mt-4 text-sm">
                     <div class="font-medium truncate">{{ user.name|default:user.email }}</div>
@@ -56,33 +59,99 @@
             {% endif %}
         </div>
 
-        <nav class="flex-1 p-3 space-y-1">
-            {% block sidebar_nav %}{% endblock %}
+        {# Nav items #}
+        <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+            {% if user.is_authenticated %}
+
+                {% nav_active 'dashboard' as active_dashboard %}
+                <a href="{% url 'dashboard' %}"
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium
+                          {% if active_dashboard %}bg-primary-light text-primary border-l-4 border-primary
+                          {% else %}text-text-primary hover:bg-background border-l-4 border-transparent{% endif %}">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+                </a>
+
+                {% nav_active 'patients:list' 'patients:new' as active_patients %}
+                <a href="{% url 'patients:list' %}"
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium
+                          {% if active_patients %}bg-primary-light text-primary border-l-4 border-primary
+                          {% else %}text-text-primary hover:bg-background border-l-4 border-transparent{% endif %}">
+                    <i data-lucide="users" class="w-4 h-4"></i> Patients
+                </a>
+
+                {% nav_active 'cases:list' as active_cases %}
+                <a href="{% url 'cases:list' %}"
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium
+                          {% if active_cases %}bg-primary-light text-primary border-l-4 border-primary
+                          {% else %}text-text-primary hover:bg-background border-l-4 border-transparent{% endif %}">
+                    <i data-lucide="file-text" class="w-4 h-4"></i> Cases
+                </a>
+
+                {# New Case — highlighted button style #}
+                <a href="{% url 'cases:new' %}"
+                   class="mt-2 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
+                          bg-primary text-white hover:bg-primary-hover">
+                    <i data-lucide="plus" class="w-4 h-4"></i> New Case
+                </a>
+
+                {% nav_active 'reports:list' as active_reports %}
+                <a href="{% url 'reports:list' %}"
+                   class="mt-2 flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium
+                          {% if active_reports %}bg-primary-light text-primary border-l-4 border-primary
+                          {% else %}text-text-primary hover:bg-background border-l-4 border-transparent{% endif %}">
+                    <i data-lucide="file-check-2" class="w-4 h-4"></i> Reports
+                </a>
+
+                {% if user.is_admin %}
+                    <div class="pt-4 pb-1 px-3 text-xs font-semibold uppercase tracking-wider text-text-muted">
+                        Admin
+                    </div>
+
+                    {% nav_active 'accounts:admin_clinicians' as active_clinicians %}
+                    <a href="{% url 'accounts:admin_clinicians' %}"
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium
+                              {% if active_clinicians %}bg-primary-light text-primary border-l-4 border-primary
+                              {% else %}text-text-primary hover:bg-background border-l-4 border-transparent{% endif %}">
+                        <i data-lucide="user-cog" class="w-4 h-4"></i> Clinicians
+                    </a>
+
+                    {% nav_active 'accounts:admin_overview' as active_overview %}
+                    <a href="{% url 'accounts:admin_overview' %}"
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium
+                              {% if active_overview %}bg-primary-light text-primary border-l-4 border-primary
+                              {% else %}text-text-primary hover:bg-background border-l-4 border-transparent{% endif %}">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4"></i> System Overview
+                    </a>
+                {% endif %}
+
+            {% endif %}
         </nav>
 
+        {# Bottom actions #}
         <div class="p-3 border-t border-border space-y-1">
-            {% block sidebar_bottom %}
-                {% if user.is_authenticated %}
-                    <a href="{% url 'accounts:settings' %}"
-                       class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-text-primary hover:bg-background">
-                        <i data-lucide="settings" class="w-4 h-4"></i> Settings
-                    </a>
-                    <form method="post" action="{% url 'accounts:logout' %}">
-                        {% csrf_token %}
-                        <button type="submit"
-                                class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-text-primary hover:bg-background">
-                            <i data-lucide="log-out" class="w-4 h-4"></i> Logout
-                        </button>
-                    </form>
-                {% endif %}
-            {% endblock %}
+            {% if user.is_authenticated %}
+                {% nav_active 'accounts:settings' as active_settings %}
+                <a href="{% url 'accounts:settings' %}"
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm
+                          {% if active_settings %}bg-primary-light text-primary
+                          {% else %}text-text-primary hover:bg-background{% endif %}">
+                    <i data-lucide="settings" class="w-4 h-4"></i> Settings
+                </a>
+                <form method="post" action="{% url 'accounts:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-text-primary hover:bg-background">
+                        <i data-lucide="log-out" class="w-4 h-4"></i> Logout
+                    </button>
+                </form>
+            {% endif %}
         </div>
     </aside>
 
-    {# Main content area #}
-    <div class="flex-1 ml-60 flex flex-col">
-        <header class="h-16 bg-surface border-b border-border px-8 flex items-center justify-between">
-            <h1 class="text-xl font-semibold">{% block page_title %}Dashboard{% endblock %}</h1>
+    {# ===== Main content area ===== #}
+    <div class="flex-1 ml-60 flex flex-col min-w-0">
+        <header class="h-16 bg-surface border-b border-border px-8 flex items-center justify-between sticky top-0 z-10">
+            <h1 class="text-xl font-semibold truncate">{% block page_title %}Dashboard{% endblock %}</h1>
             <div class="flex items-center gap-3">
                 {% block page_actions %}{% endblock %}
             </div>
@@ -93,7 +162,12 @@
                 {% if messages %}
                     <div class="mb-4 space-y-2">
                         {% for message in messages %}
-                            <div class="px-4 py-2 rounded-lg bg-primary-light text-primary text-sm">{{ message }}</div>
+                            <div class="px-4 py-2 rounded-lg text-sm
+                                {% if message.tags == 'error' %}bg-red-50 text-danger
+                                {% elif message.tags == 'success' %}bg-green-50 text-success
+                                {% else %}bg-primary-light text-primary{% endif %}">
+                                {{ message }}
+                            </div>
                         {% endfor %}
                     </div>
                 {% endif %}

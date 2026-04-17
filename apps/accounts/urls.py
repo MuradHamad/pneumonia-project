@@ -10,4 +10,6 @@ urlpatterns = [
     path("logout/", views.AppLogoutView.as_view(), name="logout"),
     path("change-password/", views.change_password_view, name="change_password"),
     path("settings/", views.settings_view, name="settings"),
+    path("admin-panel/clinicians/", views.admin_clinicians, name="admin_clinicians"),
+    path("admin-panel/overview/", views.admin_overview, name="admin_overview"),
 ]

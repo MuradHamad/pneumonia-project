@@ -3,11 +3,70 @@
 {% block title %}Dashboard — PneuDx{% endblock %}
 {% block page_title %}Dashboard{% endblock %}
 
+{% block page_actions %}
+    <a href="{% url 'cases:new' %}"
+       class="inline-flex items-center gap-2 bg-primary text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary-hover">
+        <i data-lucide="plus" class="w-4 h-4"></i> New Case
+    </a>
+{% endblock %}
+
 {% block content %}
-<div class="bg-surface rounded-xl border border-border p-6 shadow-sm">
-    <h2 class="text-2xl font-semibold mb-2">Welcome, {{ user.name|default:user.email }}</h2>
-    <p class="text-text-secondary">
-        Signed in as <strong>{{ user.get_role_display }}</strong>. Widgets and navigation arrive in later phases.
-    </p>
+<div class="space-y-6">
+
+    {# ===== Row 1 — Stat cards ===== #}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {% include "_components/stat_card.html" with icon="users" label="Total Patients" value="0" tone="primary" %}
+        {% include "_components/stat_card.html" with icon="file-text" label="Total Cases" value="0" tone="primary" %}
+        {% include "_components/stat_card.html" with icon="trending-up" label="Cases This Week" value="0" tone="info" %}
+        {% include "_components/stat_card.html" with icon="clock" label="Pending Diagnoses" value="0" tone="warning" %}
+    </div>
+
+    {# ===== Row 2 — CTA ===== #}
+    <div class="bg-surface rounded-xl border border-border p-6 shadow-sm flex items-center justify-between gap-6">
+        <div>
+            <h3 class="text-lg font-semibold mb-1">Start a new diagnosis</h3>
+            <p class="text-sm text-text-secondary max-w-xl">
+                Upload a chest X-ray and clinical measurements to receive an AI-assisted severity assessment.
+            </p>
+        </div>
+        <a href="{% url 'cases:new' %}"
+           class="shrink-0 inline-flex items-center gap-2 bg-primary text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary-hover">
+            <i data-lucide="plus" class="w-4 h-4"></i> Create New Case
+        </a>
+    </div>
+
+    {# ===== Row 3 — Recent Cases ===== #}
+    <div class="bg-surface rounded-xl border border-border shadow-sm">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-border">
+            <h3 class="text-lg font-semibold">Recent Cases</h3>
+            <a href="{% url 'cases:list' %}" class="text-sm text-primary hover:underline">View all</a>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-background text-xs font-medium uppercase text-text-secondary">
+                    <tr>
+                        <th class="text-left px-6 py-3">Case ID</th>
+                        <th class="text-left px-6 py-3">Patient</th>
+                        <th class="text-left px-6 py-3">Risk Class</th>
+                        <th class="text-left px-6 py-3">Status</th>
+                        <th class="text-left px-6 py-3">Created</th>
+                        <th class="text-right px-6 py-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-text-secondary">
+                            <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-background text-text-muted mb-2">
+                                <i data-lucide="inbox" class="w-5 h-5"></i>
+                            </div>
+                            <div class="text-sm">No cases yet. Create your first case to see it here.</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 {% endblock %}
