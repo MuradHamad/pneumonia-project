@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Settings — PneuDx{% endblock %}
+{% block page_title %}Settings{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-2xl">
+
+    <div class="bg-surface rounded-xl border border-border p-6 shadow-sm">
+        <h3 class="text-lg font-semibold mb-4">Profile</h3>
+        <dl class="grid grid-cols-3 gap-y-3 text-sm">
+            <dt class="text-text-secondary">Name</dt>
+            <dd class="col-span-2">{{ user.name }}</dd>
+
+            <dt class="text-text-secondary">Email</dt>
+            <dd class="col-span-2">{{ user.email }}</dd>
+
+            <dt class="text-text-secondary">Role</dt>
+            <dd class="col-span-2">{{ user.get_role_display }}</dd>
+
+            <dt class="text-text-secondary">Member since</dt>
+            <dd class="col-span-2">{{ user.created_at|date:"M j, Y" }}</dd>
+        </dl>
+    </div>
+
+    <div class="bg-surface rounded-xl border border-border p-6 shadow-sm">
+        <h3 class="text-lg font-semibold mb-4">Change password</h3>
+
+        <form method="post" novalidate class="space-y-4">
+            {% csrf_token %}
+            {% for field in form %}
+                <div>
+                    <label for="{{ field.id_for_label }}" class="block text-xs font-medium uppercase text-text-secondary mb-1">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <p class="mt-1 text-xs text-text-muted">{{ field.help_text|safe }}</p>
+                    {% endif %}
+                    {% if field.errors %}
+                        <p class="mt-1 text-xs text-danger">{{ field.errors|join:" " }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="bg-primary text-white rounded-lg px-4 py-2 font-medium hover:bg-primary-hover">
+                Update password
+            </button>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "auth_base.html" %}
+
+{% block title %}Sign in — PneuDx{% endblock %}
+
+{% block content %}
+<h2 class="text-2xl font-semibold mb-6 text-center">Sign in to your account</h2>
+
+{% if form.non_field_errors %}
+    <div class="mb-4 px-3 py-2 rounded-lg bg-red-50 text-danger text-sm">
+        {{ form.non_field_errors|join:" " }}
+    </div>
+{% endif %}
+
+<form method="post" novalidate class="space-y-4">
+    {% csrf_token %}
+
+    <div>
+        <label for="{{ form.username.id_for_label }}" class="block text-xs font-medium uppercase text-text-secondary mb-1">Email</label>
+        {{ form.username }}
+        {% if form.username.errors %}
+            <p class="mt-1 text-xs text-danger">{{ form.username.errors|join:" " }}</p>
+        {% endif %}
+    </div>
+
+    <div>
+        <label for="{{ form.password.id_for_label }}" class="block text-xs font-medium uppercase text-text-secondary mb-1">Password</label>
+        {{ form.password }}
+        {% if form.password.errors %}
+            <p class="mt-1 text-xs text-danger">{{ form.password.errors|join:" " }}</p>
+        {% endif %}
+    </div>
+
+    <button type="submit" class="w-full bg-primary text-white rounded-lg px-4 py-2 font-medium hover:bg-primary-hover">
+        Sign in
+    </button>
+</form>
+{% endblock %}
+
+{% block footer %}
+Contact your administrator if you forgot your password.
+{% endblock %}

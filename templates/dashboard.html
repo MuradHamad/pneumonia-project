@@ -5,7 +5,9 @@
 
 {% block content %}
 <div class="bg-surface rounded-xl border border-border p-6 shadow-sm">
-    <h2 class="text-2xl font-semibold mb-2">Welcome to PneuDx</h2>
-    <p class="text-text-secondary">Project setup complete. Real widgets arrive in later phases.</p>
+    <h2 class="text-2xl font-semibold mb-2">Welcome, {{ user.name|default:user.email }}</h2>
+    <p class="text-text-secondary">
+        Signed in as <strong>{{ user.get_role_display }}</strong>. Widgets and navigation arrive in later phases.
+    </p>
 </div>
 {% endblock %}

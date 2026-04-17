@@ -50,8 +50,8 @@
             </div>
             {% if user.is_authenticated %}
                 <div class="mt-4 text-sm">
-                    <div class="font-medium">{{ user.get_full_name|default:user.username }}</div>
-                    <div class="text-text-secondary text-xs uppercase tracking-wide">{{ user.role|default:"User" }}</div>
+                    <div class="font-medium truncate">{{ user.name|default:user.email }}</div>
+                    <div class="text-text-secondary text-xs uppercase tracking-wide">{{ user.get_role_display }}</div>
                 </div>
             {% endif %}
         </div>
@@ -61,7 +61,21 @@
         </nav>
 
         <div class="p-3 border-t border-border space-y-1">
-            {% block sidebar_bottom %}{% endblock %}
+            {% block sidebar_bottom %}
+                {% if user.is_authenticated %}
+                    <a href="{% url 'accounts:settings' %}"
+                       class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-text-primary hover:bg-background">
+                        <i data-lucide="settings" class="w-4 h-4"></i> Settings
+                    </a>
+                    <form method="post" action="{% url 'accounts:logout' %}">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-text-primary hover:bg-background">
+                            <i data-lucide="log-out" class="w-4 h-4"></i> Logout
+                        </button>
+                    </form>
+                {% endif %}
+            {% endblock %}
         </div>
     </aside>
 

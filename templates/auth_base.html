@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}PneuDx{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ["Inter", "system-ui", "sans-serif"] },
+                    colors: {
+                        primary: "#1E40AF",
+                        "primary-hover": "#1E3A8A",
+                        "primary-light": "#DBEAFE",
+                        surface: "#FFFFFF",
+                        background: "#F8FAFC",
+                        border: "#E2E8F0",
+                        "text-primary": "#0F172A",
+                        "text-secondary": "#64748B",
+                        "text-muted": "#94A3B8",
+                        success: "#16A34A",
+                        warning: "#F59E0B",
+                        danger: "#DC2626",
+                        info: "#0891B2",
+                    },
+                },
+            },
+        };
+    </script>
+</head>
+<body class="font-sans bg-background text-text-primary min-h-screen flex items-center justify-center p-6">
+
+<div class="w-full max-w-md">
+    <div class="flex items-center justify-center gap-2 mb-6">
+        <i data-lucide="activity" class="w-7 h-7 text-primary"></i>
+        <span class="text-2xl font-semibold">PneuDx</span>
+    </div>
+
+    <div class="bg-surface rounded-xl border border-border p-8 shadow-sm">
+        {% if messages %}
+            <div class="mb-4 space-y-2">
+                {% for message in messages %}
+                    <div class="px-3 py-2 rounded-lg text-sm
+                        {% if message.tags == 'error' %}bg-red-50 text-danger{% else %}bg-primary-light text-primary{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <p class="text-center text-sm text-text-secondary mt-6">
+        {% block footer %}{% endblock %}
+    </p>
+</div>
+
+<script>lucide.createIcons();</script>
+</body>
+</html>
