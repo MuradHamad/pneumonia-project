@@ -1,0 +1,19 @@
+{# Single step pill. Expects: step_num (int), label (str), current_step in context. #}
+{% if step_num < current_step %}
+    <li class="flex items-center gap-2">
+        <span class="w-7 h-7 rounded-full bg-success text-white flex items-center justify-center">
+            <i data-lucide="check" class="w-4 h-4"></i>
+        </span>
+        <span class="text-text-primary font-medium">{{ label }}</span>
+    </li>
+{% elif step_num == current_step %}
+    <li class="flex items-center gap-2">
+        <span class="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-xs font-semibold">{{ step_num }}</span>
+        <span class="text-primary font-semibold">{{ label }}</span>
+    </li>
+{% else %}
+    <li class="flex items-center gap-2 text-text-muted">
+        <span class="w-7 h-7 rounded-full bg-background border border-border flex items-center justify-center text-xs font-semibold">{{ step_num }}</span>
+        <span>{{ label }}</span>
+    </li>
+{% endif %}

@@ -65,6 +65,5 @@ def patient_new(request):
 def patient_detail(request, patient_id: int):
     """Patient info card + case history table."""
     patient = get_object_or_404(Patient.objects.select_related("registered_by"), pk=patient_id)
-    # Cases relation arrives in Phase 4; empty list for now.
-    cases: list = []
+    cases = patient.cases.select_related("clinician").order_by("-created_at")
     return render(request, "patients/detail.html", {"patient": patient, "cases": cases})

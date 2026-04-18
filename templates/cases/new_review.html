@@ -1,0 +1,60 @@
+{% extends "cases/_wizard_shell.html" %}
+
+{% block wizard_body %}
+<div class="bg-surface rounded-xl border border-border p-6 shadow-sm space-y-6">
+
+    <div>
+        <h2 class="text-lg font-semibold">Review & Submit</h2>
+        <p class="text-sm text-text-secondary mt-1">
+            Confirm details below. Submitting creates a pending case; diagnosis runs next.
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+            <h3 class="text-xs font-semibold uppercase text-text-secondary mb-2">Patient</h3>
+            <dl class="text-sm space-y-1">
+                <div class="flex justify-between"><dt class="text-text-secondary">Name</dt><dd>{{ patient.full_name }}</dd></div>
+                <div class="flex justify-between"><dt class="text-text-secondary">National ID</dt><dd>{{ patient.national_id }}</dd></div>
+                <div class="flex justify-between"><dt class="text-text-secondary">Gender</dt><dd>{{ patient.get_gender_display }}</dd></div>
+                <div class="flex justify-between"><dt class="text-text-secondary">DOB</dt><dd>{{ patient.date_of_birth|date:"M j, Y" }}</dd></div>
+            </dl>
+        </div>
+
+        <div>
+            <h3 class="text-xs font-semibold uppercase text-text-secondary mb-2">X-ray</h3>
+            <div class="rounded-lg border border-border overflow-hidden bg-background">
+                <img src="{{ xray_url }}" alt="Chest X-ray preview"
+                     class="w-full h-56 object-contain bg-black/5" />
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <h3 class="text-xs font-semibold uppercase text-text-secondary mb-2">Clinical Data</h3>
+        <dl class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+            <div><dt class="text-text-secondary">Age</dt><dd>{{ clinical.age }}</dd></div>
+            <div><dt class="text-text-secondary">SpO₂</dt><dd>{{ clinical.spo2 }}%</dd></div>
+            <div><dt class="text-text-secondary">Blood Pressure</dt><dd>{{ clinical.blood_pressure }}</dd></div>
+            <div><dt class="text-text-secondary">Respiratory Rate</dt><dd>{{ clinical.respiratory_rate }}</dd></div>
+            <div><dt class="text-text-secondary">Temperature</dt><dd>{{ clinical.temperature }} °C</dd></div>
+            <div><dt class="text-text-secondary">Urea</dt><dd>{{ clinical.urea }}</dd></div>
+            <div><dt class="text-text-secondary">pH</dt><dd>{{ clinical.ph }}</dd></div>
+            <div><dt class="text-text-secondary">WBC</dt><dd>{{ clinical.wbc_count }}</dd></div>
+            <div><dt class="text-text-secondary">Confusion</dt><dd>{% if clinical.confusion %}Yes{% else %}No{% endif %}</dd></div>
+        </dl>
+    </div>
+
+    <form method="post" class="flex items-center justify-between pt-4 border-t border-border">
+        {% csrf_token %}
+        <a href="{% url 'cases:new_clinical' %}"
+           class="inline-flex items-center gap-2 text-sm text-text-secondary hover:text-primary">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i> Back
+        </a>
+        <button type="submit"
+                class="inline-flex items-center gap-2 bg-primary text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary-hover">
+            <i data-lucide="check" class="w-4 h-4"></i> Submit Case
+        </button>
+    </form>
+</div>
+{% endblock %}

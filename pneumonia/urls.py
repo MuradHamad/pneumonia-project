@@ -2,11 +2,9 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.contrib.auth.decorators import login_required
 from django.urls import include, path
-from django.views.generic import TemplateView
 
-dashboard_view = login_required(TemplateView.as_view(template_name="dashboard.html"))
+from .views import dashboard
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -14,7 +12,7 @@ urlpatterns = [
     path("patients/", include("apps.patients.urls")),
     path("cases/", include("apps.cases.urls")),
     path("reports/", include("apps.reports.urls")),
-    path("", dashboard_view, name="dashboard"),
+    path("", dashboard, name="dashboard"),
 ]
 
 if settings.DEBUG:

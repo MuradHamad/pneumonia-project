@@ -1,0 +1,8 @@
+{# Reusable 3-step wizard indicator. Pass `current_step` (1-based int: 1, 2, or 3). #}
+<ol class="flex items-center justify-center gap-3 text-sm">
+    {% include "_components/_step_item.html" with step_num=1 label="Upload X-ray" %}
+    <li class="w-10 h-px bg-border"></li>
+    {% include "_components/_step_item.html" with step_num=2 label="Clinical Data" %}
+    <li class="w-10 h-px bg-border"></li>
+    {% include "_components/_step_item.html" with step_num=3 label="Review & Submit" %}
+</ol>

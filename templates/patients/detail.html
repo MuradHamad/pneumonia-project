@@ -80,12 +80,22 @@
                     {% for case in cases %}
                         <tr class="hover:bg-background">
                             <td class="px-6 py-3 font-medium">#{{ case.id }}</td>
-                            <td class="px-6 py-3">{{ case.risk_class|default:"—" }}</td>
-                            <td class="px-6 py-3">{{ case.severity_score|default:"—" }}</td>
-                            <td class="px-6 py-3">{{ case.status }}</td>
+                            <td class="px-6 py-3">{{ case.get_risk_class_display|default:"—" }}</td>
+                            <td class="px-6 py-3">
+                                {% if case.severity_score is not None %}
+                                    {{ case.severity_score|floatformat:2 }}
+                                {% else %}—{% endif %}
+                            </td>
+                            <td class="px-6 py-3">
+                                {% if case.status == 'DONE' %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-success">Done</span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-light text-primary">Pending</span>
+                                {% endif %}
+                            </td>
                             <td class="px-6 py-3 text-text-secondary">{{ case.created_at|date:"M j, Y" }}</td>
                             <td class="px-6 py-3 text-right">
-                                <a href="#" class="text-xs text-primary hover:underline">View</a>
+                                <span class="text-xs text-text-muted">—</span>
                             </td>
                         </tr>
                     {% empty %}
