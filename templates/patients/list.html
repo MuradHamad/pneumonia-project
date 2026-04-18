@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Patients — PneuDx{% endblock %}
+{% block page_title %}Patients{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'patients:new' %}"
+       class="inline-flex items-center gap-2 bg-primary text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary-hover">
+        <i data-lucide="user-plus" class="w-4 h-4"></i> Register New Patient
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <form method="get" class="bg-surface rounded-xl border border-border p-4 shadow-sm flex flex-wrap items-center gap-3">
+        <div class="flex-1 min-w-[240px] relative">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"></i>
+            <input type="text" name="q" value="{{ q }}"
+                   placeholder="Search by name or national ID..."
+                   class="w-full bg-white border border-border rounded-lg pl-9 pr-3 py-2 text-sm
+                          focus:border-primary focus:ring-2 focus:ring-primary-light focus:outline-none" />
+        </div>
+
+        <select name="gender"
+                class="bg-white border border-border rounded-lg px-3 py-2 text-sm
+                       focus:border-primary focus:ring-2 focus:ring-primary-light focus:outline-none">
+            <option value="">All genders</option>
+            {% for value, label in genders %}
+                <option value="{{ value }}" {% if gender_filter == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit"
+                class="bg-primary text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary-hover">
+            Search
+        </button>
+
+        {% if q or gender_filter %}
+            <a href="{% url 'patients:list' %}"
+               class="text-sm text-text-secondary hover:text-text-primary">Clear</a>
+        {% endif %}
+    </form>
+
+    <div class="bg-surface rounded-xl border border-border shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-background text-xs font-medium uppercase text-text-secondary">
+                    <tr>
+                        <th class="text-left px-6 py-3">Full Name</th>
+                        <th class="text-left px-6 py-3">National ID</th>
+                        <th class="text-left px-6 py-3">DOB (Age)</th>
+                        <th class="text-left px-6 py-3">Gender</th>
+                        <th class="text-left px-6 py-3">Registered By</th>
+                        <th class="text-right px-6 py-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                    {% for patient in page_obj %}
+                        <tr class="hover:bg-background">
+                            <td class="px-6 py-3 font-medium">
+                                <a href="{% url 'patients:detail' patient.id %}" class="hover:text-primary">{{ patient.full_name }}</a>
+                            </td>
+                            <td class="px-6 py-3 text-text-secondary">{{ patient.national_id }}</td>
+                            <td class="px-6 py-3 text-text-secondary">{{ patient.date_of_birth|date:"M j, Y" }} ({{ patient.age }})</td>
+                            <td class="px-6 py-3 text-text-secondary">{{ patient.get_gender_display }}</td>
+                            <td class="px-6 py-3 text-text-secondary">{{ patient.registered_by.name|default:patient.registered_by.email }}</td>
+                            <td class="px-6 py-3 text-right space-x-2">
+                                <a href="{% url 'patients:detail' patient.id %}"
+                                   class="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                                    View
+                                </a>
+                                <a href="{% url 'cases:new' %}?patient_id={{ patient.id }}"
+                                   class="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                                    New Case
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center text-text-secondary">
+                                <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-background text-text-muted mb-2">
+                                    <i data-lucide="users" class="w-5 h-5"></i>
+                                </div>
+                                <div class="text-sm mb-3">
+                                    {% if q or gender_filter %}
+                                        No patients match your search.
+                                    {% else %}
+                                        No patients yet. Register your first patient.
+                                    {% endif %}
+                                </div>
+                                <a href="{% url 'patients:new' %}"
+                                   class="inline-flex items-center gap-2 bg-primary text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary-hover">
+                                    <i data-lucide="user-plus" class="w-4 h-4"></i> Register Patient
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if page_obj.paginator.num_pages > 1 %}
+            <div class="flex items-center justify-between px-6 py-3 border-t border-border text-sm">
+                <span class="text-text-secondary">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    ({{ page_obj.paginator.count }} total)
+                </span>
+                <div class="flex gap-2">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if gender_filter %}&gender={{ gender_filter }}{% endif %}"
+                           class="px-3 py-1 rounded border border-border hover:bg-background">Previous</a>
+                    {% endif %}
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if gender_filter %}&gender={{ gender_filter }}{% endif %}"
+                           class="px-3 py-1 rounded border border-border hover:bg-background">Next</a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

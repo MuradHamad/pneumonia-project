@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Register New Patient — PneuDx{% endblock %}
+{% block page_title %}Register New Patient{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl space-y-4">
+
+    <nav class="text-sm text-text-secondary">
+        <a href="{% url 'patients:list' %}" class="hover:text-primary">Patients</a>
+        <span class="mx-1">/</span>
+        <span>Register New</span>
+    </nav>
+
+    {% if existing %}
+        <div class="bg-amber-50 border border-amber-200 text-amber-900 rounded-lg p-4 text-sm flex items-start gap-3">
+            <i data-lucide="alert-triangle" class="w-5 h-5 shrink-0 mt-0.5"></i>
+            <div>
+                <div class="font-medium">This national ID already exists.</div>
+                <div class="mt-1">
+                    Patient <strong>{{ existing.full_name }}</strong> is already registered.
+                    <a href="{% url 'patients:detail' existing.id %}" class="text-primary underline">View patient</a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="bg-surface rounded-xl border border-border p-6 shadow-sm">
+        <form method="post" novalidate class="space-y-5">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="px-3 py-2 rounded-lg bg-red-50 text-danger text-sm">
+                    {{ form.non_field_errors|join:" " }}
+                </div>
+            {% endif %}
+
+            {% for field in form %}
+                <div>
+                    <label for="{{ field.id_for_label }}" class="block text-xs font-medium uppercase text-text-secondary mb-1">
+                        {{ field.label }}{% if field.field.required %} *{% endif %}
+                    </label>
+
+                    {% if field.name == "gender" %}
+                        <div class="flex gap-4 pt-1">
+                            {% for radio in field %}
+                                <label class="inline-flex items-center gap-2 text-sm">
+                                    {{ radio.tag }}
+                                    <span>{{ radio.choice_label }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ field }}
+                    {% endif %}
+
+                    {% if field.help_text %}
+                        <p class="mt-1 text-xs text-text-muted">{{ field.help_text|safe }}</p>
+                    {% endif %}
+                    {% if field.errors %}
+                        <p class="mt-1 text-xs text-danger">{{ field.errors|join:" " }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <div class="flex flex-wrap gap-3 pt-2 border-t border-border">
+                <a href="{% url 'patients:list' %}"
+                   class="bg-white border border-border text-text-primary rounded-lg px-4 py-2 text-sm font-medium hover:bg-background">
+                    Cancel
+                </a>
+                <button type="submit" name="action" value="register_only"
+                        class="text-primary hover:bg-primary-light rounded-lg px-4 py-2 text-sm font-medium">
+                    Register only
+                </button>
+                <button type="submit" name="action" value="register_and_case"
+                        class="ml-auto inline-flex items-center gap-2 bg-primary text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary-hover">
+                    Register &amp; Create Case
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
