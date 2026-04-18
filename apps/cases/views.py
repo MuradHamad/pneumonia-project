@@ -10,6 +10,7 @@ from django.urls import reverse
 
 from apps.accounts.decorators import clinician_required
 from apps.patients.models import Patient
+from services import fusion_model
 
 from .forms import ClinicalDataForm, XrayUploadForm
 from .models import ClinicalData, PatientCase
@@ -38,13 +39,78 @@ def _resolve_patient(request):
     return get_object_or_404(Patient, pk=patient_id)
 
 
+CLINICAL_FIELDS = (
+    "age", "spo2", "blood_pressure", "respiratory_rate",
+    "temperature", "urea", "ph", "wbc_count", "confusion",
+)
+
+
+def _run_diagnosis(case: "PatientCase") -> None:
+    """Call fusion_model.diagnose() and persist results. Flip status to DONE."""
+    cd = case.clinical_data
+    clinical = {f: getattr(cd, f) for f in CLINICAL_FIELDS}
+    result = fusion_model.diagnose(case.xray_image.name, clinical)
+    case.severity_score = result["severity_score"]
+    case.risk_class = result["risk_class"]
+    case.heatmap_path = result.get("heatmap_path")
+    case.confidence_score = result["confidence_score"]
+    case.status = PatientCase.STATUS_DONE
+    case.save(update_fields=[
+        "severity_score", "risk_class", "heatmap_path",
+        "confidence_score", "status",
+    ])
+
+
 @clinician_required
 def case_list(request):
-    """Stub — full list lands in Phase 5."""
-    return render(request, "coming_soon.html", {
-        "page_title": "All Cases",
-        "description": "Browse and filter all diagnostic cases. Available in Phase 5.",
+    """List + filter all diagnostic cases."""
+    from django.core.paginator import Paginator
+
+    status = request.GET.get("status", "").strip().upper()
+    risk = request.GET.get("risk", "").strip().upper()
+    query = request.GET.get("q", "").strip()
+
+    cases = PatientCase.objects.select_related("patient", "clinician").all()
+    if status in {PatientCase.STATUS_PENDING, PatientCase.STATUS_DONE}:
+        cases = cases.filter(status=status)
+    if risk in dict(PatientCase.RISK_CLASS_CHOICES):
+        cases = cases.filter(risk_class=risk)
+    if query:
+        from django.db.models import Q
+        cases = cases.filter(
+            Q(patient__full_name__icontains=query)
+            | Q(patient__national_id__icontains=query)
+        )
+
+    paginator = Paginator(cases, 25)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    return render(request, "cases/list.html", {
+        "page_obj": page_obj,
+        "status_filter": status,
+        "risk_filter": risk,
+        "q": query,
+        "status_choices": PatientCase.STATUS_CHOICES,
+        "risk_choices": PatientCase.RISK_CLASS_CHOICES,
     })
+
+
+@clinician_required
+def case_detail(request, case_id: int):
+    """Case detail: X-ray, clinical data, diagnosis result card.
+
+    Placeholder diagnose() is synchronous; any case still at PENDING
+    (e.g. created before the service was wired up) gets diagnosed on
+    first view. When Phase 11 swaps in the real async model, this
+    backfill will be removed.
+    """
+    case = get_object_or_404(
+        PatientCase.objects.select_related("patient", "clinician", "clinical_data"),
+        pk=case_id,
+    )
+    if case.status == PatientCase.STATUS_PENDING:
+        _run_diagnosis(case)
+    return render(request, "cases/detail.html", {"case": case})
 
 
 @clinician_required
@@ -138,18 +204,18 @@ def case_new_review(request):
             clinical_data=clinical_data,
             status=PatientCase.STATUS_PENDING,
         )
-        # Move the temp upload into the case's xray_image field.
         final_name = Path(xray_temp).name
         with default_storage.open(xray_temp, "rb") as src:
             case.xray_image.save(final_name, src, save=False)
         case.save()
-        # Delete the temp-staging copy (xray_image.save created a new file under xrays/).
         if default_storage.exists(xray_temp):
             default_storage.delete(xray_temp)
 
+        _run_diagnosis(case)
+
         _clear_wizard_state(request)
-        messages.success(request, f"Case #{case.id} created. Awaiting diagnosis.")
-        return redirect("patients:detail", patient_id=patient.id)
+        messages.success(request, f"Case #{case.id} diagnosed — Risk Class {case.risk_class}.")
+        return redirect("cases:detail", case_id=case.id)
 
     xray_url = settings.MEDIA_URL + xray_temp
 

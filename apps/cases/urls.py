@@ -10,4 +10,5 @@ urlpatterns = [
     path("new/", views.case_new, name="new"),
     path("new/clinical/", views.case_new_clinical, name="new_clinical"),
     path("new/review/", views.case_new_review, name="new_review"),
+    path("<int:case_id>/", views.case_detail, name="detail"),
 ]

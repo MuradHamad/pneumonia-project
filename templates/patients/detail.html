@@ -95,7 +95,7 @@
                             </td>
                             <td class="px-6 py-3 text-text-secondary">{{ case.created_at|date:"M j, Y" }}</td>
                             <td class="px-6 py-3 text-right">
-                                <span class="text-xs text-text-muted">—</span>
+                                <a href="{% url 'cases:detail' case.id %}" class="text-xs text-primary hover:underline">View</a>
                             </td>
                         </tr>
                     {% empty %}
