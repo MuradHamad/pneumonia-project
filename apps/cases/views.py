@@ -110,7 +110,11 @@ def case_detail(request, case_id: int):
     )
     if case.status == PatientCase.STATUS_PENDING:
         _run_diagnosis(case)
-    return render(request, "cases/detail.html", {"case": case})
+    chat_messages = case.chat_messages.all()
+    return render(request, "cases/detail.html", {
+        "case": case,
+        "chat_messages": chat_messages,
+    })
 
 
 @clinician_required

@@ -109,5 +109,50 @@
         </div>
     </div>
 
+    {# ===== Chat panel ===== #}
+    <div id="chat" class="bg-surface rounded-xl border border-border shadow-sm">
+        <div class="flex items-center gap-2 px-6 py-4 border-b border-border">
+            <i data-lucide="message-square" class="w-5 h-5 text-primary"></i>
+            <h3 class="text-lg font-semibold">Case Assistant</h3>
+        </div>
+
+        <div class="px-6 py-4 space-y-3 max-h-96 overflow-y-auto">
+            {% for msg in chat_messages %}
+                {% if msg.is_bot %}
+                    <div class="flex items-start gap-2">
+                        <span class="shrink-0 w-7 h-7 rounded-full bg-primary-light text-primary flex items-center justify-center">
+                            <i data-lucide="bot" class="w-4 h-4"></i>
+                        </span>
+                        <div class="bg-background rounded-lg px-3 py-2 text-sm max-w-prose whitespace-pre-wrap">{{ msg.content }}</div>
+                    </div>
+                {% else %}
+                    <div class="flex items-start gap-2 justify-end">
+                        <div class="bg-primary text-white rounded-lg px-3 py-2 text-sm max-w-prose whitespace-pre-wrap">{{ msg.content }}</div>
+                        <span class="shrink-0 w-7 h-7 rounded-full bg-primary-light text-primary flex items-center justify-center">
+                            <i data-lucide="user" class="w-4 h-4"></i>
+                        </span>
+                    </div>
+                {% endif %}
+            {% empty %}
+                <div class="text-sm text-text-secondary text-center py-6">
+                    Ask the assistant about this case — diagnosis, next steps, or treatment options.
+                </div>
+            {% endfor %}
+        </div>
+
+        <form method="post" action="{% url 'chat:send' case.id %}"
+              class="flex items-center gap-2 px-6 py-4 border-t border-border">
+            {% csrf_token %}
+            <input type="text" name="content" required maxlength="2000"
+                   placeholder="Ask about this case…" autocomplete="off"
+                   class="flex-1 bg-white border border-border rounded-lg px-3 py-2 text-sm
+                          focus:border-primary focus:ring-2 focus:ring-primary-light focus:outline-none" />
+            <button type="submit"
+                    class="inline-flex items-center gap-2 bg-primary text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary-hover">
+                <i data-lucide="send" class="w-4 h-4"></i> Send
+            </button>
+        </form>
+    </div>
+
 </div>
 {% endblock %}
