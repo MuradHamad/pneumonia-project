@@ -11,5 +11,6 @@ urlpatterns = [
     path("change-password/", views.change_password_view, name="change_password"),
     path("settings/", views.settings_view, name="settings"),
     path("admin-panel/clinicians/", views.admin_clinicians, name="admin_clinicians"),
+    path("admin-panel/clinicians/new/", views.admin_clinician_new, name="admin_clinician_new"),
     path("admin-panel/overview/", views.admin_overview, name="admin_overview"),
 ]

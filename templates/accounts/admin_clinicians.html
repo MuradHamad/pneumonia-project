@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Clinicians — PneuDx{% endblock %}
+{% block page_title %}Clinicians{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'accounts:admin_clinician_new' %}"
+       class="inline-flex items-center gap-2 bg-primary text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary-hover">
+        <i data-lucide="user-plus" class="w-4 h-4"></i> New Clinician
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="bg-surface rounded-xl border border-border shadow-sm">
+        <div class="px-6 py-4 border-b border-border">
+            <h3 class="text-lg font-semibold">{{ clinicians|length }} clinician{{ clinicians|length|pluralize }}</h3>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-background text-xs font-medium uppercase text-text-secondary">
+                    <tr>
+                        <th class="text-left px-6 py-3">Name</th>
+                        <th class="text-left px-6 py-3">Email</th>
+                        <th class="text-left px-6 py-3">Password Status</th>
+                        <th class="text-left px-6 py-3">Joined</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                    {% for c in clinicians %}
+                        <tr class="hover:bg-background">
+                            <td class="px-6 py-3 font-medium">{{ c.name|default:"—" }}</td>
+                            <td class="px-6 py-3">{{ c.email }}</td>
+                            <td class="px-6 py-3">
+                                {% if c.must_change_password %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-warning">Temp — awaiting reset</span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-success">Active</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-3 text-text-secondary">{{ c.created_at|date:"M j, Y" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="px-6 py-12 text-center text-text-secondary">
+                                <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-background text-text-muted mb-2">
+                                    <i data-lucide="users" class="w-5 h-5"></i>
+                                </div>
+                                <div class="text-sm mb-3">No clinicians yet.</div>
+                                <a href="{% url 'accounts:admin_clinician_new' %}"
+                                   class="inline-flex items-center gap-2 bg-primary text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary-hover">
+                                    <i data-lucide="user-plus" class="w-4 h-4"></i> Create First Clinician
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

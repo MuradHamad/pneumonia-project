@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}System Overview — PneuDx{% endblock %}
+{% block page_title %}System Overview{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    {# ===== Stat cards ===== #}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {% include "_components/stat_card.html" with icon="users" label="Total Patients" value=stats.patients tone="primary" %}
+        {% include "_components/stat_card.html" with icon="user-cog" label="Clinicians" value=stats.clinicians tone="info" %}
+        {% include "_components/stat_card.html" with icon="file-text" label="Total Cases" value=stats.cases tone="primary" %}
+        {% include "_components/stat_card.html" with icon="trending-up" label="Cases This Week" value=stats.cases_this_week tone="info" %}
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% include "_components/stat_card.html" with icon="clock" label="Pending Diagnoses" value=stats.pending tone="warning" %}
+        {% include "_components/stat_card.html" with icon="check-circle" label="Completed Diagnoses" value=stats.done tone="success" %}
+        {% include "_components/stat_card.html" with icon="file-check-2" label="Generated Reports" value=stats.reports tone="primary" %}
+    </div>
+
+    {# ===== Recent activity ===== #}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-surface rounded-xl border border-border shadow-sm">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-border">
+                <h3 class="text-lg font-semibold">Recent Cases</h3>
+                <a href="{% url 'cases:list' %}" class="text-sm text-primary hover:underline">View all</a>
+            </div>
+            <table class="w-full text-sm">
+                <thead class="bg-background text-xs font-medium uppercase text-text-secondary">
+                    <tr>
+                        <th class="text-left px-6 py-3">Case</th>
+                        <th class="text-left px-6 py-3">Patient</th>
+                        <th class="text-left px-6 py-3">Clinician</th>
+                        <th class="text-left px-6 py-3">Created</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                    {% for case in recent_cases %}
+                        <tr class="hover:bg-background">
+                            <td class="px-6 py-3 font-medium">
+                                <a href="{% url 'cases:detail' case.id %}" class="text-primary hover:underline">#{{ case.id }}</a>
+                            </td>
+                            <td class="px-6 py-3">{{ case.patient.full_name }}</td>
+                            <td class="px-6 py-3">{{ case.clinician.name|default:case.clinician.email }}</td>
+                            <td class="px-6 py-3 text-text-secondary">{{ case.created_at|date:"M j, Y" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="4" class="px-6 py-10 text-center text-text-secondary text-sm">No cases yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="bg-surface rounded-xl border border-border shadow-sm">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-border">
+                <h3 class="text-lg font-semibold">New Clinicians</h3>
+                <a href="{% url 'accounts:admin_clinicians' %}" class="text-sm text-primary hover:underline">View all</a>
+            </div>
+            <table class="w-full text-sm">
+                <thead class="bg-background text-xs font-medium uppercase text-text-secondary">
+                    <tr>
+                        <th class="text-left px-6 py-3">Name</th>
+                        <th class="text-left px-6 py-3">Email</th>
+                        <th class="text-left px-6 py-3">Status</th>
+                        <th class="text-left px-6 py-3">Joined</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                    {% for c in recent_clinicians %}
+                        <tr class="hover:bg-background">
+                            <td class="px-6 py-3 font-medium">{{ c.name|default:"—" }}</td>
+                            <td class="px-6 py-3">{{ c.email }}</td>
+                            <td class="px-6 py-3">
+                                {% if c.must_change_password %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-warning">Temp</span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-success">Active</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-3 text-text-secondary">{{ c.created_at|date:"M j, Y" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="4" class="px-6 py-10 text-center text-text-secondary text-sm">No clinicians yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
