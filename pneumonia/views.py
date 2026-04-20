@@ -1,6 +1,7 @@
 """Project-level views (dashboard)."""
 from datetime import timedelta
 
+from django.db.models import Count
 from django.shortcuts import render
 from django.utils import timezone
 
@@ -11,7 +12,7 @@ from apps.patients.models import Patient
 
 @clinician_required
 def dashboard(request):
-    """Dashboard: real stat counts + recent cases list."""
+    """Dashboard: stat counts, recent cases, severity distribution."""
     week_ago = timezone.now() - timedelta(days=7)
 
     stats = {
@@ -27,7 +28,28 @@ def dashboard(request):
         .order_by("-created_at")[:5]
     )
 
+    counts_by_class = dict(
+        PatientCase.objects
+        .filter(status=PatientCase.STATUS_DONE, risk_class__isnull=False)
+        .values_list("risk_class")
+        .annotate(n=Count("id"))
+        .values_list("risk_class", "n")
+    )
+    total_done = sum(counts_by_class.values())
+    severity_distribution = []
+    for code, label in PatientCase.RISK_CLASS_CHOICES:
+        count = counts_by_class.get(code, 0)
+        pct = (count / total_done * 100) if total_done else 0
+        severity_distribution.append({
+            "code": code,
+            "label": label,
+            "count": count,
+            "pct": round(pct, 1),
+        })
+
     return render(request, "dashboard.html", {
         "stats": stats,
         "recent_cases": recent_cases,
+        "severity_distribution": severity_distribution,
+        "severity_total": total_done,
     })

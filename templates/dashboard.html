@@ -35,7 +35,40 @@
         </a>
     </div>
 
-    {# ===== Row 3 — Recent Cases ===== #}
+    {# ===== Row 3 — Severity distribution ===== #}
+    <div class="bg-surface rounded-xl border border-border shadow-sm p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold">Severity Distribution</h3>
+            <span class="text-xs text-text-secondary">
+                {% if severity_total %}{{ severity_total }} completed case{{ severity_total|pluralize }}{% else %}No completed cases{% endif %}
+            </span>
+        </div>
+
+        {% if severity_total %}
+            <div class="space-y-3">
+                {% for row in severity_distribution %}
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="font-medium">{{ row.label }}</span>
+                            <span class="text-text-secondary">{{ row.count }} ({{ row.pct }}%)</span>
+                        </div>
+                        <div class="w-full h-2 bg-background rounded-full overflow-hidden">
+                            <div class="h-full bg-primary rounded-full" style="width: {{ row.pct }}%"></div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="py-8 text-center text-sm text-text-secondary">
+                <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-background text-text-muted mb-2">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                </div>
+                <div>Distribution will appear once diagnoses are completed.</div>
+            </div>
+        {% endif %}
+    </div>
+
+    {# ===== Row 4 — Recent Cases ===== #}
     <div class="bg-surface rounded-xl border border-border shadow-sm">
         <div class="flex items-center justify-between px-6 py-4 border-b border-border">
             <h3 class="text-lg font-semibold">Recent Cases</h3>
