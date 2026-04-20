@@ -3,6 +3,15 @@
 {% block title %}Case #{{ case.id }} — PneuDx{% endblock %}
 {% block page_title %}Case #{{ case.id }}{% endblock %}
 
+{% block page_actions %}
+    {% if case.status == 'DONE' %}
+        <a href="{% url 'reports:preview' case.id %}"
+           class="inline-flex items-center gap-2 bg-primary text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary-hover">
+            <i data-lucide="file-check-2" class="w-4 h-4"></i> Generate Report
+        </a>
+    {% endif %}
+{% endblock %}
+
 {% block content %}
 <div class="space-y-6">
 

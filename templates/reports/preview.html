@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Report — Case #{{ case.id }} — PneuDx{% endblock %}
+{% block page_title %}Report — Case #{{ case.id }}{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'cases:detail' case.id %}"
+       class="text-sm text-text-secondary hover:text-primary">← Back to case</a>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-4xl mx-auto">
+
+    <nav class="text-sm text-text-secondary">
+        <a href="{% url 'cases:list' %}" class="hover:text-primary">Cases</a>
+        <span class="mx-1">/</span>
+        <a href="{% url 'cases:detail' case.id %}" class="hover:text-primary">Case #{{ case.id }}</a>
+        <span class="mx-1">/</span>
+        <span>Report</span>
+    </nav>
+
+    {# ===== Status bar ===== #}
+    <div class="bg-surface rounded-xl border border-border p-6 shadow-sm flex items-center justify-between gap-4 flex-wrap">
+        <div>
+            <h2 class="text-lg font-semibold">
+                {% if report %}Report Generated{% else %}Report Draft{% endif %}
+            </h2>
+            <p class="text-sm text-text-secondary mt-1">
+                {% if report %}
+                    Last saved {{ report.generated_at|date:"M j, Y H:i" }} ({{ report.get_format_display }})
+                {% else %}
+                    A report has not been saved yet. Review the draft below, then generate.
+                {% endif %}
+            </p>
+        </div>
+        <div class="flex items-center gap-2">
+            {% if report %}
+                <a href="{% url 'reports:export_pdf' case.id %}"
+                   class="inline-flex items-center gap-2 bg-primary text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-primary-hover">
+                    <i data-lucide="file-down" class="w-4 h-4"></i> PDF
+                </a>
+                <a href="{% url 'reports:export_csv' case.id %}"
+                   class="inline-flex items-center gap-2 bg-white border border-border text-text-primary rounded-lg px-3 py-2 text-sm font-medium hover:bg-background">
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> CSV
+                </a>
+            {% else %}
+                <form method="post" action="{% url 'reports:generate' case.id %}" class="flex items-center gap-2">
+                    {% csrf_token %}
+                    <select name="format"
+                            class="bg-white border border-border rounded-lg px-3 py-2 text-sm">
+                        <option value="PDF">PDF</option>
+                        <option value="CSV">CSV</option>
+                    </select>
+                    <button type="submit"
+                            class="inline-flex items-center gap-2 bg-primary text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary-hover">
+                        <i data-lucide="file-check-2" class="w-4 h-4"></i> Generate Report
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ===== Draft body ===== #}
+    <div class="bg-surface rounded-xl border border-border p-6 shadow-sm">
+        <h3 class="text-sm font-semibold uppercase text-text-secondary mb-3">Clinical Summary</h3>
+        <pre class="whitespace-pre-wrap font-sans text-sm leading-relaxed">{{ draft.simplified_text }}</pre>
+    </div>
+
+    <div class="bg-surface rounded-xl border border-border p-6 shadow-sm">
+        <h3 class="text-sm font-semibold uppercase text-text-secondary mb-3">Medication Instructions</h3>
+        <pre class="whitespace-pre-wrap font-sans text-sm leading-relaxed">{{ draft.medication_instructions }}</pre>
+    </div>
+
+    {% if report %}
+        <form method="post" action="{% url 'reports:generate' case.id %}" class="flex items-center gap-2 justify-end">
+            {% csrf_token %}
+            <input type="hidden" name="format" value="{{ report.format }}" />
+            <button type="submit"
+                    class="inline-flex items-center gap-2 bg-white border border-border text-text-primary rounded-lg px-3 py-2 text-sm font-medium hover:bg-background">
+                <i data-lucide="refresh-ccw" class="w-4 h-4"></i> Regenerate from current case
+            </button>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}
