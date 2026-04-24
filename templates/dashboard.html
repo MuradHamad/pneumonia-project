@@ -22,15 +22,15 @@
     </div>
 
     {# ===== Row 2 — CTA ===== #}
-    <div class="bg-surface rounded-xl border border-border p-6 shadow-sm flex items-center justify-between gap-6">
-        <div>
+    <div class="bg-surface rounded-xl border border-border p-6 shadow-sm flex flex-col sm:flex-row sm:items-center gap-4">
+        <div class="flex-1">
             <h3 class="text-lg font-semibold mb-1">Start a new diagnosis</h3>
-            <p class="text-sm text-text-secondary max-w-xl">
+            <p class="text-sm text-text-secondary">
                 Upload a chest X-ray and clinical measurements to receive an AI-assisted severity assessment.
             </p>
         </div>
         <a href="{% url 'cases:new' %}"
-           class="shrink-0 inline-flex items-center gap-2 bg-primary text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary-hover">
+           class="inline-flex items-center gap-2 bg-primary text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary-hover self-start sm:self-auto">
             <i data-lucide="plus" class="w-4 h-4"></i> Create New Case
         </a>
     </div>

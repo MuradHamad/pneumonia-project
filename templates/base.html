@@ -5,6 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}PneuDx{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231E40AF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 12h-4l-3 9L9 3l-3 9H2'/%3E%3C/svg%3E" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -38,12 +39,19 @@
         };
     </script>
 </head>
-<body class="font-sans bg-background text-text-primary min-h-screen">
+<body class="font-sans bg-background text-text-primary min-h-screen overflow-x-hidden">
+
+{# ===== Mobile sidebar overlay ===== #}
+<div id="sidebar-overlay"
+     class="fixed inset-0 bg-black/40 z-20 hidden md:hidden"
+     onclick="closeSidebar()"></div>
 
 <div class="flex min-h-screen">
 
     {# ===== Sidebar ===== #}
-    <aside class="fixed inset-y-0 left-0 w-60 bg-surface border-r border-border flex flex-col z-10">
+    <aside id="sidebar"
+           class="fixed inset-y-0 left-0 w-60 bg-surface border-r border-border flex flex-col z-30
+                  -translate-x-full md:translate-x-0 transition-transform duration-200">
 
         {# Logo + user info #}
         <div class="p-6 border-b border-border">
@@ -155,24 +163,40 @@
     </aside>
 
     {# ===== Main content area ===== #}
-    <div class="flex-1 ml-60 flex flex-col min-w-0">
-        <header class="h-16 bg-surface border-b border-border px-8 flex items-center justify-between sticky top-0 z-10">
-            <h1 class="text-xl font-semibold truncate">{% block page_title %}Dashboard{% endblock %}</h1>
-            <div class="flex items-center gap-3">
+    <div class="flex-1 ml-0 md:ml-60 flex flex-col min-w-0">
+        <header class="h-16 bg-surface border-b border-border px-4 md:px-8 flex items-center justify-between sticky top-0 z-10">
+            <div class="flex items-center gap-3 min-w-0">
+                {# Hamburger — mobile only #}
+                <button id="sidebar-toggle"
+                        type="button"
+                        onclick="openSidebar()"
+                        class="md:hidden p-2 rounded-lg text-text-secondary hover:bg-background"
+                        aria-label="Open menu">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+                <h1 class="text-xl font-semibold truncate">{% block page_title %}Dashboard{% endblock %}</h1>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
                 {% block page_actions %}{% endblock %}
             </div>
         </header>
 
-        <main class="flex-1 p-8 bg-background">
+        <main class="flex-1 p-4 md:p-8 bg-background">
             <div class="max-w-7xl mx-auto">
                 {% if messages %}
-                    <div class="mb-4 space-y-2">
+                    <div class="mb-4 space-y-2" data-toasts>
                         {% for message in messages %}
-                            <div class="px-4 py-2 rounded-lg text-sm
-                                {% if message.tags == 'error' %}bg-red-50 text-danger
-                                {% elif message.tags == 'success' %}bg-green-50 text-success
-                                {% else %}bg-primary-light text-primary{% endif %}">
-                                {{ message }}
+                            <div role="alert"
+                                 class="toast flex items-start gap-3 px-4 py-3 rounded-lg text-sm border transition-opacity duration-300
+                                    {% if message.tags == 'error' %}bg-red-50 text-danger border-red-200
+                                    {% elif message.tags == 'success' %}bg-green-50 text-success border-green-200
+                                    {% elif message.tags == 'warning' %}bg-amber-50 text-warning border-amber-200
+                                    {% else %}bg-primary-light text-primary border-blue-200{% endif %}">
+                                <i data-lucide="{% if message.tags == 'error' %}alert-circle{% elif message.tags == 'success' %}check-circle-2{% elif message.tags == 'warning' %}alert-triangle{% else %}info{% endif %}" class="w-4 h-4 mt-0.5 shrink-0"></i>
+                                <div class="flex-1">{{ message }}</div>
+                                <button type="button" onclick="this.parentElement.remove()" class="shrink-0 opacity-60 hover:opacity-100" aria-label="Dismiss">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                </button>
                             </div>
                         {% endfor %}
                     </div>
@@ -184,6 +208,51 @@
     </div>
 </div>
 
-<script>lucide.createIcons();</script>
+<script>
+    lucide.createIcons();
+
+    // ===== Mobile sidebar =====
+    function openSidebar() {
+        document.getElementById('sidebar').classList.remove('-translate-x-full');
+        document.getElementById('sidebar-overlay').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.add('-translate-x-full');
+        document.getElementById('sidebar-overlay').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+    // Close sidebar when a nav link is clicked on mobile
+    document.querySelectorAll('#sidebar a').forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth < 768) closeSidebar();
+        });
+    });
+
+    // Auto-dismiss toasts after 5s
+    setTimeout(() => {
+        document.querySelectorAll('[data-toasts] .toast').forEach(el => {
+            el.style.opacity = '0';
+            setTimeout(() => el.remove(), 300);
+        });
+    }, 5000);
+
+    // Submit-loading guard: disable submit buttons + show spinner on POST forms
+    document.addEventListener('submit', (e) => {
+        const form = e.target;
+        if (form.method && form.method.toLowerCase() !== 'post') return;
+        const btns = form.querySelectorAll('button[type="submit"], button:not([type])');
+        btns.forEach(btn => {
+            if (btn.disabled) return;
+            btn.dataset.originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+            btn.innerHTML = '<svg class="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="40 60"/></svg><span>Working…</span>';
+            btn.style.display = 'inline-flex';
+            btn.style.alignItems = 'center';
+            btn.style.gap = '0.5rem';
+        });
+    });
+</script>
 </body>
 </html>

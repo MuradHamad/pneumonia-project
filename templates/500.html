@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Server Error — PneuDx</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231E40AF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 12h-4l-3 9L9 3l-3 9H2'/%3E%3C/svg%3E" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="font-sans bg-slate-50 text-slate-900 min-h-screen flex items-center justify-center p-6">
+    <div class="bg-white rounded-xl border border-slate-200 p-10 shadow-sm text-center max-w-lg w-full">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-50 text-red-600 mb-4">
+            <i data-lucide="alert-octagon" class="w-7 h-7"></i>
+        </div>
+        <div class="text-5xl font-bold">500</div>
+        <h2 class="text-xl font-semibold mt-2">Something went wrong</h2>
+        <p class="text-sm text-slate-500 mt-2">
+            An unexpected error occurred. The team has been notified. Try again shortly.
+        </p>
+        <div class="mt-6">
+            <a href="/" class="inline-flex items-center gap-2 bg-blue-800 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-blue-900">
+                <i data-lucide="home" class="w-4 h-4"></i> Home
+            </a>
+        </div>
+    </div>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

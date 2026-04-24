@@ -120,12 +120,12 @@
 
     {# ===== Chat panel ===== #}
     <div id="chat" class="bg-surface rounded-xl border border-border shadow-sm">
-        <div class="flex items-center gap-2 px-6 py-4 border-b border-border">
+        <div class="flex items-center gap-2 px-4 sm:px-6 py-4 border-b border-border">
             <i data-lucide="message-square" class="w-5 h-5 text-primary"></i>
             <h3 class="text-lg font-semibold">Case Assistant</h3>
         </div>
 
-        <div class="px-6 py-4 space-y-3 max-h-96 overflow-y-auto">
+        <div class="px-4 sm:px-6 py-4 space-y-3 max-h-96 overflow-y-auto">
             {% for msg in chat_messages %}
                 {% if msg.is_bot %}
                     <div class="flex items-start gap-2">
@@ -150,7 +150,7 @@
         </div>
 
         <form method="post" action="{% url 'chat:send' case.id %}"
-              class="flex items-center gap-2 px-6 py-4 border-t border-border">
+              class="flex items-center gap-2 px-4 sm:px-6 py-4 border-t border-border">
             {% csrf_token %}
             <input type="text" name="content" required maxlength="2000"
                    placeholder="Ask about this case…" autocomplete="off"

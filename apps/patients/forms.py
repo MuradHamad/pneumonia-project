@@ -1,4 +1,6 @@
 """Patient registration form."""
+from datetime import date
+
 from django import forms
 
 from .models import Patient
@@ -40,3 +42,15 @@ class PatientForm(forms.ModelForm):
         if not nid:
             raise forms.ValidationError("National ID is required.")
         return nid
+
+    def clean_date_of_birth(self) -> date:
+        dob = self.cleaned_data.get("date_of_birth")
+        if dob is None:
+            return dob
+        today = date.today()
+        if dob >= today:
+            raise forms.ValidationError("Date of birth must be in the past.")
+        age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+        if age > 120:
+            raise forms.ValidationError("Date of birth is too far in the past (max 120 years).")
+        return dob

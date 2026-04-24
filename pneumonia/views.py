@@ -1,4 +1,4 @@
-"""Project-level views (dashboard)."""
+"""Project-level views (dashboard + error handlers)."""
 from datetime import timedelta
 
 from django.db.models import Count
@@ -8,6 +8,16 @@ from django.utils import timezone
 from apps.accounts.decorators import clinician_required
 from apps.cases.models import PatientCase
 from apps.patients.models import Patient
+
+
+def page_not_found(request, exception):
+    """Custom 404 handler — renders even when DEBUG=True."""
+    return render(request, "404.html", status=404)
+
+
+def server_error(request):
+    """Custom 500 handler — self-contained, no DB calls."""
+    return render(request, "500.html", status=500)
 
 
 @clinician_required

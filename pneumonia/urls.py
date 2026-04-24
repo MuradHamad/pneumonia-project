@@ -2,9 +2,13 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
+from django.views.defaults import page_not_found as _django_404
 
-from .views import dashboard
+from .views import dashboard, page_not_found, server_error
+
+handler404 = "pneumonia.views.page_not_found"
+handler500 = "pneumonia.views.server_error"
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -14,6 +18,8 @@ urlpatterns = [
     path("chat/", include("apps.chat.urls")),
     path("reports/", include("apps.reports.urls")),
     path("", dashboard, name="dashboard"),
+    # Catch-all so the custom 404 renders in DEBUG mode too
+    re_path(r"^.*$", lambda req, *a, **kw: page_not_found(req, None)),
 ]
 
 if settings.DEBUG:
