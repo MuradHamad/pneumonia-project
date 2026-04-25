@@ -111,21 +111,55 @@ App runs at `http://localhost:8000`.
 
 ## Model placeholder
 
-Until the real PyTorch model is trained, use `services/fusion_model.py` with a placeholder that returns random but realistic values:
+# CLAUDE.md Addendum — Phase 11
 
-```python
-# Placeholder — replace when pneumonia_model.pt is ready
-def diagnose(xray_path: str, clinical_data: dict) -> dict:
-    return {
-        "severity_score": random.uniform(0, 1),
-        "risk_class": random.choice(["I", "II", "III", "IV", "V"]),
-        "heatmap_path": None,  # or a sample heatmap image
-        "confidence_score": random.uniform(0.6, 0.99),
-    }
+Add these notes to the existing `CLAUDE.md` (or replace relevant sections).
+
+---
+
+## Updated: Model placeholder section
+
+**REMOVE the entire "Model placeholder" section** in CLAUDE.md. The placeholder is gone as of Phase 11. Replace with:
+
+### Real fusion model (Phase 11+)
+
+The trained PyTorch model lives at `models/p3_best_densenet.pth`. It is loaded once at Django startup and held as a module-level singleton in `services/fusion_model.py`.
+
+Critical facts:
+- Architecture class: `MultiTaskPneumoniaModel` — DenseNet121 + 8-dim clinical MLP + fusion
+- The checkpoint was saved with `self.vision_model = densenet`. Do NOT rename this attribute — it will break loading.
+- Model outputs two logits: `(diag_logit, severity_logit)`. Both need `torch.sigmoid()` to get probabilities 0.0–1.0.
+- Clinical input must be in exact order: age, bun, hr, sys_bp, rr, temp_fahrenheit, spo2, gcs_total
+- Clinical inputs must be scaled with `models/clinical_scaler.joblib` BEFORE the forward pass
+- Image preprocessing: resize 224×224, ToTensor, Normalize with ImageNet mean/std ([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+
+---
+
+## New rules
+
+1. **Never load the model per-request.** It's a singleton. Use `AppConfig.ready()` or a module-level variable with lazy init.
+
+2. **`torch.no_grad()` for inference.** Except during Grad-CAM (which needs gradients on the image input).
+
+3. **Grad-CAM target layer is `model.vision_model.features[-1]`** — not `img_extractor`. The project2 notebook has a bug that references a nonexistent attribute.
+
+4. **Temperature stored in Fahrenheit.** The model was trained on Fahrenheit. The form accepts either °C or °F with a toggle; conversion happens at form-clean time, never at inference.
+
+5. **If the model file is missing, fail cleanly.** Don't crash Django on startup. Log a warning, set a module-level flag `MODEL_AVAILABLE = False`, and return `status='FAILED'` with an explanation for any diagnosis attempts.
+
+6. **No medical recommendations.** CLAUDE.md already forbids inventing clinical logic. With the real model, this applies even more strictly. The model outputs probabilities; we display them honestly. Reports should say "pneumonia probability 73%" not "likely has pneumonia."
+
+---
+
+## Files that must not be committed
+
+Add these to `.gitignore`:
 ```
-
-The interface must match what the real model will return, so swapping it later is a one-file change.
-
+models/*.pth
+models/*.pt
+models/*.joblib
+media/heatmaps/
+```
 ---
 
 ## ChatBot placeholder

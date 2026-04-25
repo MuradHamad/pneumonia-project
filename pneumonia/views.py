@@ -1,7 +1,6 @@
 """Project-level views (dashboard + error handlers)."""
 from datetime import timedelta
 
-from django.db.models import Count
 from django.shortcuts import render
 from django.utils import timezone
 
@@ -11,18 +10,16 @@ from apps.patients.models import Patient
 
 
 def page_not_found(request, exception):
-    """Custom 404 handler — renders even when DEBUG=True."""
     return render(request, "404.html", status=404)
 
 
 def server_error(request):
-    """Custom 500 handler — self-contained, no DB calls."""
     return render(request, "500.html", status=500)
 
 
 @clinician_required
 def dashboard(request):
-    """Dashboard: stat counts, recent cases, severity distribution."""
+    """Dashboard: stat counts, recent cases, two-bucket diagnosis distribution."""
     week_ago = timezone.now() - timedelta(days=7)
 
     stats = {
@@ -38,24 +35,20 @@ def dashboard(request):
         .order_by("-created_at")[:5]
     )
 
-    counts_by_class = dict(
-        PatientCase.objects
-        .filter(status=PatientCase.STATUS_DONE, risk_class__isnull=False)
-        .values_list("risk_class")
-        .annotate(n=Count("id"))
-        .values_list("risk_class", "n")
-    )
-    total_done = sum(counts_by_class.values())
-    severity_distribution = []
-    for code, label in PatientCase.RISK_CLASS_CHOICES:
-        count = counts_by_class.get(code, 0)
-        pct = (count / total_done * 100) if total_done else 0
-        severity_distribution.append({
-            "code": code,
-            "label": label,
-            "count": count,
-            "pct": round(pct, 1),
-        })
+    done_qs = PatientCase.objects.filter(status=PatientCase.STATUS_DONE)
+    no_pneu = done_qs.filter(has_pneumonia=False).count()
+    pneu_mild = done_qs.filter(has_pneumonia=True, is_severe=False).count()
+    pneu_severe = done_qs.filter(has_pneumonia=True, is_severe=True).count()
+    total_done = no_pneu + pneu_mild + pneu_severe
+
+    def _pct(n):
+        return round(n / total_done * 100, 1) if total_done else 0
+
+    severity_distribution = [
+        {"label": "No Pneumonia",           "count": no_pneu,    "pct": _pct(no_pneu),    "color": "bg-success"},
+        {"label": "Pneumonia (non-severe)", "count": pneu_mild,  "pct": _pct(pneu_mild),  "color": "bg-warning"},
+        {"label": "Pneumonia (severe)",     "count": pneu_severe, "pct": _pct(pneu_severe), "color": "bg-danger"},
+    ]
 
     return render(request, "dashboard.html", {
         "stats": stats,

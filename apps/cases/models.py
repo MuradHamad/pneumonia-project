@@ -1,20 +1,26 @@
 """Cases domain: ClinicalData (1-to-1) and PatientCase (core diagnosis entity)."""
 from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
 class ClinicalData(models.Model):
-    """Vitals/labs snapshot at time of diagnosis. Composed inside a PatientCase."""
+    """Vitals/labs snapshot at time of diagnosis.
+
+    Field order matches the trained model's expected input:
+    age, bun, hr, sys_bp, rr, temp_fahrenheit, spo2, gcs_total.
+    """
 
     age = models.PositiveIntegerField()
+    bun = models.FloatField()
+    hr = models.PositiveIntegerField()
+    sys_bp = models.PositiveIntegerField()
+    rr = models.PositiveIntegerField()
+    temp_fahrenheit = models.FloatField()
     spo2 = models.FloatField()
-    blood_pressure = models.CharField(max_length=15)
-    respiratory_rate = models.PositiveIntegerField()
-    temperature = models.FloatField()
-    urea = models.FloatField()
-    ph = models.FloatField()
-    wbc_count = models.FloatField()
-    confusion = models.BooleanField(default=False)
+    gcs_total = models.PositiveIntegerField(
+        validators=[MinValueValidator(3), MaxValueValidator(15)],
+    )
 
     class Meta:
         db_table = "clinical_data"
@@ -26,24 +32,13 @@ class ClinicalData(models.Model):
 class PatientCase(models.Model):
     """One diagnosis session. AI fields stay NULL until fusion model finishes."""
 
-    RISK_I = "I"
-    RISK_II = "II"
-    RISK_III = "III"
-    RISK_IV = "IV"
-    RISK_V = "V"
-    RISK_CLASS_CHOICES = [
-        (RISK_I, "Class I"),
-        (RISK_II, "Class II"),
-        (RISK_III, "Class III"),
-        (RISK_IV, "Class IV"),
-        (RISK_V, "Class V"),
-    ]
-
     STATUS_PENDING = "PENDING"
     STATUS_DONE = "DONE"
+    STATUS_FAILED = "FAILED"
     STATUS_CHOICES = [
         (STATUS_PENDING, "Pending"),
         (STATUS_DONE, "Done"),
+        (STATUS_FAILED, "Failed"),
     ]
 
     patient = models.ForeignKey(
@@ -62,15 +57,11 @@ class PatientCase(models.Model):
         related_name="case",
     )
     xray_image = models.ImageField(upload_to="xrays/")
-    severity_score = models.FloatField(null=True, blank=True)
-    risk_class = models.CharField(
-        max_length=3,
-        choices=RISK_CLASS_CHOICES,
-        null=True,
-        blank=True,
-    )
     heatmap_path = models.CharField(max_length=255, null=True, blank=True)
-    confidence_score = models.FloatField(null=True, blank=True)
+    diag_probability = models.FloatField(null=True, blank=True)
+    severity_probability = models.FloatField(null=True, blank=True)
+    has_pneumonia = models.BooleanField(null=True, blank=True)
+    is_severe = models.BooleanField(null=True, blank=True)
     status = models.CharField(
         max_length=10,
         choices=STATUS_CHOICES,

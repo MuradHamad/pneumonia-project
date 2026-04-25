@@ -7,7 +7,7 @@
     {% if case.status == 'DONE' %}
         <a href="{% url 'reports:preview' case.id %}"
            class="inline-flex items-center gap-2 bg-primary text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary-hover">
-            <i data-lucide="file-check-2" class="w-4 h-4"></i> Generate Report
+            <i data-lucide="file-check-2" class="w-4 h-4"></i> Report
         </a>
     {% endif %}
 {% endblock %}
@@ -24,60 +24,146 @@
     </nav>
 
     {# ===== Diagnosis result card ===== #}
-    <div class="bg-surface rounded-xl border border-border p-6 shadow-sm">
+    <div class="bg-surface rounded-xl border border-border shadow-sm overflow-hidden">
+
         {% if case.status == 'DONE' %}
-            <div class="flex items-start justify-between gap-6 flex-wrap">
-                <div>
-                    <h2 class="text-lg font-semibold">Diagnosis Result</h2>
-                    <p class="text-sm text-text-secondary mt-1">Generated {{ case.created_at|date:"M j, Y H:i" }}</p>
+            {# Primary banner #}
+            {% if case.has_pneumonia and case.is_severe %}
+                <div class="bg-red-50 border-b border-red-100 px-6 py-4 flex items-center gap-3">
+                    <i data-lucide="alert-triangle" class="w-5 h-5 text-danger shrink-0"></i>
+                    <div>
+                        <div class="font-semibold text-danger">Pneumonia Detected — Severe</div>
+                        <div class="text-sm text-danger/80 mt-0.5">
+                            Analyzed {{ case.created_at|date:"M j, Y H:i" }} · DenseNet121 Multi-Task (MIMIC-CXR)
+                        </div>
+                    </div>
                 </div>
+            {% elif case.has_pneumonia %}
+                <div class="bg-amber-50 border-b border-amber-100 px-6 py-4 flex items-center gap-3">
+                    <i data-lucide="alert-circle" class="w-5 h-5 text-warning shrink-0"></i>
+                    <div>
+                        <div class="font-semibold text-warning">Pneumonia Detected — Non-Severe</div>
+                        <div class="text-sm text-warning/80 mt-0.5">
+                            Analyzed {{ case.created_at|date:"M j, Y H:i" }} · DenseNet121 Multi-Task (MIMIC-CXR)
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="bg-green-50 border-b border-green-100 px-6 py-4 flex items-center gap-3">
+                    <i data-lucide="check-circle-2" class="w-5 h-5 text-success shrink-0"></i>
+                    <div>
+                        <div class="font-semibold text-success">No Pneumonia Detected</div>
+                        <div class="text-sm text-success/80 mt-0.5">
+                            Analyzed {{ case.created_at|date:"M j, Y H:i" }} · DenseNet121 Multi-Task (MIMIC-CXR)
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            {# Probability tiles #}
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    {% with rc=case.risk_class %}
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold
-                            {% if rc == 'I' or rc == 'II' %}bg-green-50 text-success
-                            {% elif rc == 'III' %}bg-amber-50 text-warning
-                            {% else %}bg-red-50 text-danger{% endif %}">
-                            Risk Class {{ rc }}
-                        </span>
-                    {% endwith %}
+                    <div class="text-xs font-medium uppercase text-text-secondary mb-1">Pneumonia Probability</div>
+                    <div class="text-3xl font-bold mt-1">
+                        {% if case.diag_probability is not None %}
+                            {% widthratio case.diag_probability 1 100 %}%
+                        {% else %}—{% endif %}
+                    </div>
+                    {% if case.diag_probability is not None %}
+                        <div class="mt-3 h-2 bg-background rounded-full overflow-hidden">
+                            {% with p=case.diag_probability %}
+                            <div class="h-full rounded-full transition-all
+                                {% if p >= 0.85 %}bg-success
+                                {% elif p >= 0.7 %}bg-primary
+                                {% elif p >= 0.5 %}bg-warning
+                                {% else %}bg-text-muted{% endif %}"
+                                 style="width: {% widthratio case.diag_probability 1 100 %}%"></div>
+                            {% endwith %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <div class="text-xs font-medium uppercase text-text-secondary mb-1">
+                        Severity Probability
+                        {% if not case.has_pneumonia %}
+                            <span class="ml-1 normal-case font-normal text-text-muted">(not meaningful when no pneumonia)</span>
+                        {% endif %}
+                    </div>
+                    <div class="text-3xl font-bold mt-1">
+                        {% if case.severity_probability is not None %}
+                            {% widthratio case.severity_probability 1 100 %}%
+                        {% else %}—{% endif %}
+                    </div>
+                    {% if case.severity_probability is not None %}
+                        <div class="mt-3 h-2 bg-background rounded-full overflow-hidden">
+                            {% with p=case.severity_probability %}
+                            <div class="h-full rounded-full transition-all
+                                {% if p >= 0.85 %}bg-danger
+                                {% elif p >= 0.7 %}bg-warning
+                                {% elif p >= 0.5 %}bg-warning
+                                {% else %}bg-text-muted{% endif %}"
+                                 style="width: {% widthratio case.severity_probability 1 100 %}%"></div>
+                            {% endwith %}
+                        </div>
+                    {% endif %}
                 </div>
             </div>
 
-            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <div class="text-xs font-medium uppercase text-text-secondary">Severity Score</div>
-                    <div class="mt-2 text-3xl font-bold">{{ case.severity_score|floatformat:3 }}</div>
-                    <div class="mt-2 h-2 bg-background rounded-full overflow-hidden">
-                        <div class="h-full bg-primary"
-                             style="width: {% widthratio case.severity_score 1 100 %}%"></div>
+        {% elif case.status == 'FAILED' %}
+            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center gap-3">
+                <i data-lucide="x-circle" class="w-5 h-5 text-text-secondary shrink-0"></i>
+                <div class="flex-1">
+                    <div class="font-semibold text-text-primary">Diagnosis Failed</div>
+                    <div class="text-sm text-text-secondary mt-0.5">
+                        The AI model could not process this case. Check the server log for details.
                     </div>
                 </div>
-                <div>
-                    <div class="text-xs font-medium uppercase text-text-secondary">Confidence</div>
-                    <div class="mt-2 text-3xl font-bold">{{ case.confidence_score|floatformat:2 }}</div>
-                    <div class="mt-2 h-2 bg-background rounded-full overflow-hidden">
-                        <div class="h-full bg-info"
-                             style="width: {% widthratio case.confidence_score 1 100 %}%"></div>
-                    </div>
-                </div>
+                <form method="post" action="{% url 'cases:retry' case.id %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="inline-flex items-center gap-2 bg-white border border-border text-text-primary rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-background">
+                        <i data-lucide="refresh-ccw" class="w-3.5 h-3.5"></i> Retry Diagnosis
+                    </button>
+                </form>
             </div>
+            <div class="p-6 text-sm text-text-secondary">
+                Submit the case again to retry, or contact support if the issue persists.
+            </div>
+
         {% else %}
-            <div class="flex items-center gap-3 text-text-secondary">
-                <i data-lucide="loader-circle" class="w-5 h-5 animate-spin"></i>
+            <div class="px-6 py-5 flex items-center gap-3 text-text-secondary">
+                <i data-lucide="loader-circle" class="w-5 h-5 animate-spin text-primary"></i>
                 <div>
                     <div class="text-sm font-medium text-text-primary">Diagnosis pending</div>
-                    <div class="text-xs">Fusion model is still processing this case.</div>
+                    <div class="text-xs">AI model is processing this case.</div>
                 </div>
             </div>
         {% endif %}
     </div>
 
-    {# ===== X-ray + Clinical Data ===== #}
+    {# ===== X-ray + heatmap tabs | Clinical Data ===== #}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        {# Image tabs #}
         <div class="bg-surface rounded-xl border border-border p-6 shadow-sm">
-            <h3 class="text-sm font-semibold uppercase text-text-secondary mb-3">Chest X-ray</h3>
+            <div class="flex items-center gap-2 mb-4" id="image-tabs">
+                <button type="button" onclick="showTab('original')"
+                        id="tab-original"
+                        class="text-sm font-medium px-3 py-1.5 rounded-lg transition-colors">
+                    Original X-Ray
+                </button>
+                {% if case.heatmap_path %}
+                    <button type="button" onclick="showTab('heatmap')"
+                            id="tab-heatmap"
+                            class="text-sm font-medium px-3 py-1.5 rounded-lg transition-colors">
+                        AI Focus (Heatmap)
+                    </button>
+                {% endif %}
+            </div>
+
             {% if case.xray_image %}
-                <div class="rounded-lg border border-border overflow-hidden bg-black/5">
+                <div id="panel-original" class="rounded-lg border border-border overflow-hidden bg-black/5">
                     <img src="{{ case.xray_image.url }}" alt="Chest X-ray"
                          class="w-full h-80 object-contain" />
                 </div>
@@ -86,28 +172,34 @@
             {% endif %}
 
             {% if case.heatmap_path %}
-                <h3 class="text-sm font-semibold uppercase text-text-secondary mt-6 mb-3">Heatmap</h3>
-                <div class="rounded-lg border border-border overflow-hidden bg-black/5">
-                    <img src="{{ MEDIA_URL }}{{ case.heatmap_path }}" alt="Heatmap overlay"
+                <div id="panel-heatmap" class="rounded-lg border border-border overflow-hidden bg-black/5">
+                    <img src="{{ MEDIA_URL }}{{ case.heatmap_path }}" alt="Grad-CAM heatmap overlay"
                          class="w-full h-80 object-contain" />
                 </div>
+                <p class="mt-2 text-xs text-text-secondary">
+                    Red/yellow areas indicate regions most influential to the diagnosis.
+                </p>
+            {% elif case.status == 'DONE' %}
+                <p class="mt-2 text-xs text-text-muted">Heatmap not available for this case.</p>
             {% endif %}
         </div>
 
+        {# Clinical data #}
         <div class="bg-surface rounded-xl border border-border p-6 shadow-sm">
-            <h3 class="text-sm font-semibold uppercase text-text-secondary mb-3">Clinical Data</h3>
+            <h3 class="text-sm font-semibold uppercase text-text-secondary mb-4">Clinical Data</h3>
             {% with cd=case.clinical_data %}
             <dl class="grid grid-cols-2 gap-4 text-sm">
-                <div><dt class="text-text-secondary">Age</dt><dd class="font-medium">{{ cd.age }}</dd></div>
+                <div><dt class="text-text-secondary">Age</dt><dd class="font-medium">{{ cd.age }} yrs</dd></div>
                 <div><dt class="text-text-secondary">SpO₂</dt><dd class="font-medium">{{ cd.spo2 }}%</dd></div>
-                <div><dt class="text-text-secondary">Blood Pressure</dt><dd class="font-medium">{{ cd.blood_pressure }}</dd></div>
-                <div><dt class="text-text-secondary">Respiratory Rate</dt><dd class="font-medium">{{ cd.respiratory_rate }}</dd></div>
-                <div><dt class="text-text-secondary">Temperature</dt><dd class="font-medium">{{ cd.temperature }} °C</dd></div>
-                <div><dt class="text-text-secondary">Urea</dt><dd class="font-medium">{{ cd.urea }}</dd></div>
-                <div><dt class="text-text-secondary">pH</dt><dd class="font-medium">{{ cd.ph }}</dd></div>
-                <div><dt class="text-text-secondary">WBC</dt><dd class="font-medium">{{ cd.wbc_count }}</dd></div>
-                <div class="col-span-2"><dt class="text-text-secondary">Confusion (CURB-65)</dt>
-                    <dd class="font-medium">{% if cd.confusion %}Yes{% else %}No{% endif %}</dd></div>
+                <div><dt class="text-text-secondary">Heart Rate</dt><dd class="font-medium">{{ cd.hr }} bpm</dd></div>
+                <div><dt class="text-text-secondary">Resp. Rate</dt><dd class="font-medium">{{ cd.rr }} /min</dd></div>
+                <div><dt class="text-text-secondary">Systolic BP</dt><dd class="font-medium">{{ cd.sys_bp }} mmHg</dd></div>
+                <div>
+                    <dt class="text-text-secondary">Temperature</dt>
+                    <dd class="font-medium">{{ cd.temp_fahrenheit }}°F</dd>
+                </div>
+                <div><dt class="text-text-secondary">BUN</dt><dd class="font-medium">{{ cd.bun }} mg/dL</dd></div>
+                <div><dt class="text-text-secondary">GCS Total</dt><dd class="font-medium">{{ cd.gcs_total }}</dd></div>
             </dl>
             {% endwith %}
 
@@ -164,4 +256,29 @@
     </div>
 
 </div>
+
+<script>
+(function () {
+    function showTab(tab) {
+        var panels = { original: document.getElementById('panel-original'), heatmap: document.getElementById('panel-heatmap') };
+        var tabs   = { original: document.getElementById('tab-original'),   heatmap: document.getElementById('tab-heatmap') };
+        Object.keys(panels).forEach(function (k) {
+            if (!panels[k]) return;
+            panels[k].classList.toggle('hidden', k !== tab);
+        });
+        Object.keys(tabs).forEach(function (k) {
+            if (!tabs[k]) return;
+            if (k === tab) {
+                tabs[k].classList.add('bg-primary-light', 'text-primary');
+                tabs[k].classList.remove('text-text-secondary', 'hover:bg-background');
+            } else {
+                tabs[k].classList.remove('bg-primary-light', 'text-primary');
+                tabs[k].classList.add('text-text-secondary', 'hover:bg-background');
+            }
+        });
+    }
+    window.showTab = showTab;
+    document.addEventListener('DOMContentLoaded', function () { showTab('original'); });
+})();
+</script>
 {% endblock %}

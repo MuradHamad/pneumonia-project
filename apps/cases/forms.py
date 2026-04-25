@@ -13,6 +13,11 @@ ALLOWED_XRAY_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
 ALLOWED_XRAY_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp")
 MAX_XRAY_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
 
+# Model fields that map 1-to-1 with ClinicalData columns.
+CLINICAL_MODEL_FIELDS = frozenset([
+    "age", "bun", "hr", "sys_bp", "rr", "temp_fahrenheit", "spo2", "gcs_total",
+])
+
 
 class XrayUploadForm(forms.Form):
     """Step 1: upload an X-ray image. Validates content-type, extension, size."""
@@ -39,76 +44,113 @@ class XrayUploadForm(forms.Form):
 
 
 class ClinicalDataForm(forms.ModelForm):
-    """Step 2: 9 clinical fields + confusion toggle."""
+    """Step 2: 8 clinical fields in display order + temperature unit toggle.
+
+    Display order (per ui-design.md 3.8):
+        Row 1: age, spo2
+        Row 2: hr, rr
+        Row 3: sys_bp, temp_fahrenheit (with unit toggle)
+        Row 4: bun, gcs_total
+
+    temp_unit is a form-only field — not stored in ClinicalData. The clean()
+    method converts the entered temperature to Fahrenheit before saving.
+    """
+
+    TEMP_FAHRENHEIT = "F"
+    TEMP_CELSIUS = "C"
+    TEMP_UNIT_CHOICES = [(TEMP_FAHRENHEIT, "°F"), (TEMP_CELSIUS, "°C")]
+
+    temp_unit = forms.ChoiceField(
+        choices=TEMP_UNIT_CHOICES,
+        initial=TEMP_FAHRENHEIT,
+        required=False,
+        label="Temperature unit",
+    )
 
     class Meta:
         model = ClinicalData
-        fields = [
-            "age",
-            "spo2",
-            "blood_pressure",
-            "respiratory_rate",
-            "temperature",
-            "urea",
-            "ph",
-            "wbc_count",
-            "confusion",
-        ]
-        widgets = {
-            "blood_pressure": forms.TextInput(attrs={"placeholder": "e.g. 120/80"}),
-            "confusion": forms.CheckboxInput(),
-        }
+        fields = ["age", "spo2", "hr", "rr", "sys_bp", "temp_fahrenheit", "bun", "gcs_total"]
         labels = {
+            "age": "Age (years)",
             "spo2": "SpO₂ (%)",
-            "blood_pressure": "Blood Pressure (mmHg)",
-            "respiratory_rate": "Respiratory Rate (breaths/min)",
-            "temperature": "Temperature (°C)",
-            "urea": "Urea (mmol/L)",
-            "ph": "Blood pH",
-            "wbc_count": "WBC Count (×10⁹/L)",
-            "confusion": "Confusion present (CURB-65)",
+            "hr": "Heart Rate (bpm)",
+            "rr": "Respiratory Rate (breaths/min)",
+            "sys_bp": "Systolic Blood Pressure (mmHg)",
+            "temp_fahrenheit": "Temperature",
+            "bun": "BUN — Blood Urea Nitrogen (mg/dL)",
+            "gcs_total": "GCS Total — Glasgow Coma Scale",
         }
         help_texts = {
-            "age": "Age at time of diagnosis.",
+            "age": "Patient age in years",
+            "spo2": "Normal: 95–100%",
+            "hr": "Normal: 60–100 bpm",
+            "rr": "Normal: 12–20 breaths/min",
+            "sys_bp": "Normal: 90–120 mmHg",
+            "temp_fahrenheit": "Normal: 97–99°F (36.1–37.2°C)",
+            "bun": "Normal: 7–20 mg/dL",
+            "gcs_total": "15 = normal, 3 = deep coma",
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for name, field in self.fields.items():
-            if isinstance(field.widget, forms.CheckboxInput):
-                field.widget.attrs.setdefault(
-                    "class",
-                    "w-4 h-4 text-primary border-border rounded focus:ring-primary-light",
-                )
+            if name == "temp_unit":
                 continue
             field.widget.attrs.setdefault("class", INPUT_CLASSES)
+
+    def clean_age(self) -> int:
+        v = self.cleaned_data["age"]
+        if not (0 <= v <= 130):
+            raise ValidationError("Age must be between 0 and 130.")
+        return v
 
     def clean_spo2(self) -> float:
         v = self.cleaned_data["spo2"]
         if not (0 <= v <= 100):
-            raise ValidationError("SpO₂ must be between 0 and 100.")
+            raise ValidationError("SpO₂ must be between 0 and 100%.")
         return v
 
-    def clean_temperature(self) -> float:
-        v = self.cleaned_data["temperature"]
-        if not (25 <= v <= 45):
-            raise ValidationError("Temperature must be between 25°C and 45°C.")
+    def clean_hr(self) -> int:
+        v = self.cleaned_data["hr"]
+        if not (20 <= v <= 300):
+            raise ValidationError("Heart rate must be between 20 and 300 bpm.")
         return v
 
-    def clean_ph(self) -> float:
-        v = self.cleaned_data["ph"]
-        if not (6.5 <= v <= 8.0):
-            raise ValidationError("Blood pH must be between 6.5 and 8.0.")
+    def clean_rr(self) -> int:
+        v = self.cleaned_data["rr"]
+        if not (4 <= v <= 80):
+            raise ValidationError("Respiratory rate must be between 4 and 80 breaths/min.")
         return v
 
-    def clean_respiratory_rate(self) -> int:
-        v = self.cleaned_data["respiratory_rate"]
-        if v <= 0 or v > 80:
-            raise ValidationError("Respiratory rate must be between 1 and 80.")
+    def clean_sys_bp(self) -> int:
+        v = self.cleaned_data["sys_bp"]
+        if not (50 <= v <= 300):
+            raise ValidationError("Systolic BP must be between 50 and 300 mmHg.")
         return v
 
-    def clean_age(self) -> int:
-        v = self.cleaned_data["age"]
-        if v < 0 or v > 130:
-            raise ValidationError("Age must be between 0 and 130.")
+    def clean_bun(self) -> float:
+        v = self.cleaned_data["bun"]
+        if not (0 <= v <= 300):
+            raise ValidationError("BUN must be between 0 and 300 mg/dL.")
         return v
+
+    def clean_gcs_total(self) -> int:
+        v = self.cleaned_data["gcs_total"]
+        if not (3 <= v <= 15):
+            raise ValidationError("GCS Total must be between 3 and 15.")
+        return v
+
+    def clean(self):
+        cleaned = super().clean()
+        temp = cleaned.get("temp_fahrenheit")
+        unit = cleaned.get("temp_unit") or self.TEMP_FAHRENHEIT
+        if temp is not None:
+            if unit == self.TEMP_CELSIUS:
+                cleaned["temp_fahrenheit"] = round(temp * 9 / 5 + 32, 2)
+            final_f = cleaned["temp_fahrenheit"]
+            if not (80.0 <= final_f <= 115.0):
+                self.add_error(
+                    "temp_fahrenheit",
+                    "Temperature out of plausible range (80–115°F / 27–46°C).",
+                )
+        return cleaned

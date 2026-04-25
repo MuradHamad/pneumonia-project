@@ -35,14 +35,14 @@
             </select>
         </div>
         <div>
-            <label for="risk" class="block text-xs font-medium uppercase text-text-secondary mb-1">Risk Class</label>
-            <select id="risk" name="risk"
+            <label for="diag" class="block text-xs font-medium uppercase text-text-secondary mb-1">Diagnosis</label>
+            <select id="diag" name="diag"
                     class="w-full bg-white border border-border rounded-lg px-3 py-2
                            focus:border-primary focus:ring-2 focus:ring-primary-light focus:outline-none">
                 <option value="">All</option>
-                {% for val, label in risk_choices %}
-                    <option value="{{ val }}" {% if risk_filter == val %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
+                <option value="no_pneumonia" {% if diag_filter == 'no_pneumonia' %}selected{% endif %}>No Pneumonia</option>
+                <option value="pneumonia"    {% if diag_filter == 'pneumonia' %}selected{% endif %}>Pneumonia</option>
+                <option value="severe"       {% if diag_filter == 'severe' %}selected{% endif %}>Severe Pneumonia</option>
             </select>
         </div>
 
@@ -51,7 +51,7 @@
                     class="inline-flex items-center gap-2 bg-primary text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary-hover">
                 <i data-lucide="filter" class="w-4 h-4"></i> Apply
             </button>
-            {% if q or status_filter or risk_filter %}
+            {% if q or status_filter or diag_filter %}
                 <a href="{% url 'cases:list' %}"
                    class="text-sm text-text-secondary hover:text-primary">Clear</a>
             {% endif %}
@@ -70,8 +70,8 @@
                     <tr>
                         <th class="text-left px-6 py-3">Case ID</th>
                         <th class="text-left px-6 py-3">Patient</th>
-                        <th class="text-left px-6 py-3">Risk</th>
-                        <th class="text-left px-6 py-3">Severity</th>
+                        <th class="text-left px-6 py-3">Diagnosis</th>
+                        <th class="text-left px-6 py-3">Probability</th>
                         <th class="text-left px-6 py-3">Status</th>
                         <th class="text-left px-6 py-3">Created</th>
                         <th class="text-right px-6 py-3">Actions</th>
@@ -82,15 +82,35 @@
                         <tr class="hover:bg-background">
                             <td class="px-6 py-3 font-medium">#{{ case.id }}</td>
                             <td class="px-6 py-3">{{ case.patient.full_name }}</td>
-                            <td class="px-6 py-3">{{ case.get_risk_class_display|default:"—" }}</td>
                             <td class="px-6 py-3">
-                                {% if case.severity_score is not None %}
-                                    {{ case.severity_score|floatformat:2 }}
+                                {% if case.has_pneumonia is True %}
+                                    {% if case.is_severe %}
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-danger">
+                                            <i data-lucide="alert-triangle" class="w-3 h-3"></i> Severe
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-warning">
+                                            <i data-lucide="alert-circle" class="w-3 h-3"></i> Pneumonia
+                                        </span>
+                                    {% endif %}
+                                {% elif case.has_pneumonia is False %}
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-success">
+                                        <i data-lucide="check-circle-2" class="w-3 h-3"></i> Healthy
+                                    </span>
+                                {% else %}
+                                    <span class="text-text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-3 text-text-secondary">
+                                {% if case.diag_probability is not None %}
+                                    {% widthratio case.diag_probability 1 100 %}%
                                 {% else %}—{% endif %}
                             </td>
                             <td class="px-6 py-3">
                                 {% if case.status == 'DONE' %}
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-success">Done</span>
+                                {% elif case.status == 'FAILED' %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-text-secondary">Failed</span>
                                 {% else %}
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-light text-primary">Pending</span>
                                 {% endif %}
@@ -121,11 +141,11 @@
                 </div>
                 <div class="flex items-center gap-2">
                     {% if page_obj.has_previous %}
-                        <a href="?{% if q %}q={{ q }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if risk_filter %}risk={{ risk_filter }}&{% endif %}page={{ page_obj.previous_page_number }}"
+                        <a href="?{% if q %}q={{ q }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if diag_filter %}diag={{ diag_filter }}&{% endif %}page={{ page_obj.previous_page_number }}"
                            class="px-3 py-1.5 rounded-lg border border-border hover:bg-background">Prev</a>
                     {% endif %}
                     {% if page_obj.has_next %}
-                        <a href="?{% if q %}q={{ q }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if risk_filter %}risk={{ risk_filter }}&{% endif %}page={{ page_obj.next_page_number }}"
+                        <a href="?{% if q %}q={{ q }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if diag_filter %}diag={{ diag_filter }}&{% endif %}page={{ page_obj.next_page_number }}"
                            class="px-3 py-1.5 rounded-lg border border-border hover:bg-background">Next</a>
                     {% endif %}
                 </div>

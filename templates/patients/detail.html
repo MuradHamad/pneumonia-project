@@ -29,7 +29,7 @@
                     on {{ patient.created_at|date:"M j, Y" }}
                 </div>
             </div>
-            <div class="text-sm text-text-secondary">
+            <div>
                 <button type="button"
                         class="bg-white border border-border text-text-primary rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-background cursor-not-allowed opacity-60"
                         disabled title="Editing available in a later phase">
@@ -69,8 +69,8 @@
                 <thead class="bg-background text-xs font-medium uppercase text-text-secondary">
                     <tr>
                         <th class="text-left px-6 py-3">Case ID</th>
-                        <th class="text-left px-6 py-3">Risk Class</th>
-                        <th class="text-left px-6 py-3">Severity Score</th>
+                        <th class="text-left px-6 py-3">Diagnosis</th>
+                        <th class="text-left px-6 py-3">Prob. %</th>
                         <th class="text-left px-6 py-3">Status</th>
                         <th class="text-left px-6 py-3">Created</th>
                         <th class="text-right px-6 py-3">Actions</th>
@@ -80,15 +80,35 @@
                     {% for case in cases %}
                         <tr class="hover:bg-background">
                             <td class="px-6 py-3 font-medium">#{{ case.id }}</td>
-                            <td class="px-6 py-3">{{ case.get_risk_class_display|default:"—" }}</td>
                             <td class="px-6 py-3">
-                                {% if case.severity_score is not None %}
-                                    {{ case.severity_score|floatformat:2 }}
+                                {% if case.has_pneumonia is True %}
+                                    {% if case.is_severe %}
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-danger">
+                                            <i data-lucide="alert-triangle" class="w-3 h-3"></i> Severe
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-warning">
+                                            <i data-lucide="alert-circle" class="w-3 h-3"></i> Pneumonia
+                                        </span>
+                                    {% endif %}
+                                {% elif case.has_pneumonia is False %}
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-success">
+                                        <i data-lucide="check-circle-2" class="w-3 h-3"></i> Healthy
+                                    </span>
+                                {% else %}
+                                    <span class="text-text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-3 text-text-secondary">
+                                {% if case.diag_probability is not None %}
+                                    {% widthratio case.diag_probability 1 100 %}%
                                 {% else %}—{% endif %}
                             </td>
                             <td class="px-6 py-3">
                                 {% if case.status == 'DONE' %}
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-success">Done</span>
+                                {% elif case.status == 'FAILED' %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-text-secondary">Failed</span>
                                 {% else %}
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-light text-primary">Pending</span>
                                 {% endif %}

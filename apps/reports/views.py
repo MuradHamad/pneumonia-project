@@ -18,10 +18,6 @@ from services import report_builder
 from .models import Report
 
 
-# Built-in reportlab fonts (Helvetica/Times) lack many Unicode glyphs.
-# Replace known medical/scientific symbols with ASCII equivalents before
-# rendering. Registering a Unicode TTF would also work, but requires
-# bundling a font file.
 PDF_UNICODE_REPLACEMENTS = {
     "₀": "0", "₁": "1", "₂": "2", "₃": "3", "₄": "4",
     "₅": "5", "₆": "6", "₇": "7", "₈": "8", "₉": "9",
@@ -42,7 +38,6 @@ def _pdf_safe(text: str) -> str:
 
 @clinician_required
 def report_list(request):
-    """All generated reports across cases."""
     reports = (
         Report.objects
         .select_related("patient_case", "patient_case__patient", "patient_case__clinician")
@@ -53,7 +48,6 @@ def report_list(request):
 
 @clinician_required
 def report_preview(request, case_id: int):
-    """Draft preview for a case's report. Shows existing Report if present."""
     case = get_object_or_404(
         PatientCase.objects.select_related("patient", "clinician", "clinical_data"),
         pk=case_id,
@@ -70,7 +64,6 @@ def report_preview(request, case_id: int):
 @clinician_required
 @require_POST
 def report_generate(request, case_id: int):
-    """Persist the report for a case (idempotent — updates existing row)."""
     case = get_object_or_404(PatientCase, pk=case_id)
     if case.status != PatientCase.STATUS_DONE:
         messages.error(request, "Diagnosis must be complete before generating a report.")
@@ -98,7 +91,6 @@ def report_generate(request, case_id: int):
 
 @clinician_required
 def report_export_pdf(request, case_id: int):
-    """Stream a styled PDF of the report."""
     case = get_object_or_404(
         PatientCase.objects.select_related("patient", "clinician", "clinical_data"),
         pk=case_id,
@@ -119,9 +111,9 @@ def report_export_pdf(request, case_id: int):
     body = ParagraphStyle("body", parent=styles["BodyText"], leading=14, fontSize=10)
 
     story = [
-        Paragraph(_pdf_safe(f"Pneumonia Severity Report - Case #{case.id}"), h1),
+        Paragraph(_pdf_safe(f"Pneumonia Assessment Report — Case #{case.id}"), h1),
         Spacer(1, 0.4 * cm),
-        Paragraph("Case Summary", h2),
+        Paragraph("Clinical Summary", h2),
     ]
     for para in _pdf_safe(content["simplified_text"]).split("\n\n"):
         story.append(Paragraph(para.replace("\n", "<br/>"), body))
@@ -143,7 +135,6 @@ def report_export_pdf(request, case_id: int):
 
 @clinician_required
 def report_export_csv(request, case_id: int):
-    """Stream a CSV dump of the report key-value rows."""
     case = get_object_or_404(
         PatientCase.objects.select_related("patient", "clinician", "clinical_data"),
         pk=case_id,
@@ -160,18 +151,19 @@ def report_export_csv(request, case_id: int):
     writer.writerow(["national_id", case.patient.national_id])
     writer.writerow(["clinician", case.clinician.name or case.clinician.email])
     writer.writerow(["created_at", case.created_at.isoformat()])
-    writer.writerow(["risk_class", case.risk_class or ""])
-    writer.writerow(["severity_score", case.severity_score if case.severity_score is not None else ""])
-    writer.writerow(["confidence_score", case.confidence_score if case.confidence_score is not None else ""])
+    writer.writerow(["status", case.status])
+    writer.writerow(["has_pneumonia", case.has_pneumonia])
+    writer.writerow(["is_severe", case.is_severe])
+    writer.writerow(["diag_probability", case.diag_probability if case.diag_probability is not None else ""])
+    writer.writerow(["severity_probability", case.severity_probability if case.severity_probability is not None else ""])
     writer.writerow(["age", cd.age])
+    writer.writerow(["bun", cd.bun])
+    writer.writerow(["hr", cd.hr])
+    writer.writerow(["sys_bp", cd.sys_bp])
+    writer.writerow(["rr", cd.rr])
+    writer.writerow(["temp_fahrenheit", cd.temp_fahrenheit])
     writer.writerow(["spo2", cd.spo2])
-    writer.writerow(["blood_pressure", cd.blood_pressure])
-    writer.writerow(["respiratory_rate", cd.respiratory_rate])
-    writer.writerow(["temperature", cd.temperature])
-    writer.writerow(["urea", cd.urea])
-    writer.writerow(["ph", cd.ph])
-    writer.writerow(["wbc_count", cd.wbc_count])
-    writer.writerow(["confusion", "Yes" if cd.confusion else "No"])
+    writer.writerow(["gcs_total", cd.gcs_total])
     writer.writerow(["simplified_text", content["simplified_text"]])
     writer.writerow(["medication_instructions", content["medication_instructions"]])
 
@@ -180,7 +172,6 @@ def report_export_csv(request, case_id: int):
 
 
 def _content_for(case) -> dict:
-    """Pull content from the saved Report if present, otherwise compose it fresh."""
     existing = Report.objects.filter(patient_case=case).first()
     if existing:
         return {
@@ -191,7 +182,6 @@ def _content_for(case) -> dict:
 
 
 def _touch_report_format(case, fmt: str, content: dict) -> None:
-    """Ensure a Report row exists and remember the last-used export format."""
     Report.objects.update_or_create(
         patient_case=case,
         defaults={

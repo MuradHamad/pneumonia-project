@@ -2,7 +2,8 @@
 
 {% block wizard_body %}
 <form method="post"
-      class="bg-surface rounded-xl border border-border p-6 shadow-sm space-y-6">
+      class="bg-surface rounded-xl border border-border p-6 shadow-sm space-y-6"
+      id="clinical-form">
     {% csrf_token %}
 
     <div>
@@ -16,31 +17,99 @@
         </div>
     {% endif %}
 
+    {# Hidden field that stores the selected temperature unit #}
+    <input type="hidden" name="temp_unit" id="temp_unit_input"
+           value="{{ form.temp_unit.value|default:'F' }}" />
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {% for field in form %}
-            {% if field.name == "confusion" %}
-                <div class="md:col-span-2 flex items-center gap-2 pt-2">
-                    {{ field }}
-                    <label for="{{ field.id_for_label }}" class="text-sm">{{ field.label }}</label>
-                    {% if field.errors %}
-                        <p class="text-xs text-danger ml-2">{{ field.errors|join:", " }}</p>
-                    {% endif %}
+
+        {# Row 1: Age | SpO2 #}
+        <div>
+            <label for="{{ form.age.id_for_label }}" class="block text-sm font-medium mb-1">
+                {{ form.age.label }}
+            </label>
+            {{ form.age }}
+            <p class="mt-1 text-xs text-text-secondary">{{ form.age.help_text }}</p>
+            {% if form.age.errors %}<p class="mt-1 text-xs text-danger">{{ form.age.errors|join:", " }}</p>{% endif %}
+        </div>
+
+        <div>
+            <label for="{{ form.spo2.id_for_label }}" class="block text-sm font-medium mb-1">
+                {{ form.spo2.label }}
+            </label>
+            {{ form.spo2 }}
+            <p class="mt-1 text-xs text-text-secondary">{{ form.spo2.help_text }}</p>
+            {% if form.spo2.errors %}<p class="mt-1 text-xs text-danger">{{ form.spo2.errors|join:", " }}</p>{% endif %}
+        </div>
+
+        {# Row 2: Heart Rate | Respiratory Rate #}
+        <div>
+            <label for="{{ form.hr.id_for_label }}" class="block text-sm font-medium mb-1">
+                {{ form.hr.label }}
+            </label>
+            {{ form.hr }}
+            <p class="mt-1 text-xs text-text-secondary">{{ form.hr.help_text }}</p>
+            {% if form.hr.errors %}<p class="mt-1 text-xs text-danger">{{ form.hr.errors|join:", " }}</p>{% endif %}
+        </div>
+
+        <div>
+            <label for="{{ form.rr.id_for_label }}" class="block text-sm font-medium mb-1">
+                {{ form.rr.label }}
+            </label>
+            {{ form.rr }}
+            <p class="mt-1 text-xs text-text-secondary">{{ form.rr.help_text }}</p>
+            {% if form.rr.errors %}<p class="mt-1 text-xs text-danger">{{ form.rr.errors|join:", " }}</p>{% endif %}
+        </div>
+
+        {# Row 3: Systolic BP | Temperature (with unit toggle) #}
+        <div>
+            <label for="{{ form.sys_bp.id_for_label }}" class="block text-sm font-medium mb-1">
+                {{ form.sys_bp.label }}
+            </label>
+            {{ form.sys_bp }}
+            <p class="mt-1 text-xs text-text-secondary">{{ form.sys_bp.help_text }}</p>
+            {% if form.sys_bp.errors %}<p class="mt-1 text-xs text-danger">{{ form.sys_bp.errors|join:", " }}</p>{% endif %}
+        </div>
+
+        <div>
+            <div class="flex items-center justify-between mb-1">
+                <label for="{{ form.temp_fahrenheit.id_for_label }}" class="block text-sm font-medium">
+                    Temperature
+                </label>
+                {# °F / °C toggle #}
+                <div class="flex items-center border border-border rounded-lg overflow-hidden text-xs font-medium">
+                    <button type="button" id="btn-unit-f"
+                            onclick="setTempUnit('F')"
+                            class="px-3 py-1 transition-colors">°F</button>
+                    <button type="button" id="btn-unit-c"
+                            onclick="setTempUnit('C')"
+                            class="px-3 py-1 transition-colors border-l border-border">°C</button>
                 </div>
-            {% else %}
-                <div>
-                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium mb-1">
-                        {{ field.label }}
-                    </label>
-                    {{ field }}
-                    {% if field.help_text %}
-                        <p class="mt-1 text-xs text-text-secondary">{{ field.help_text }}</p>
-                    {% endif %}
-                    {% if field.errors %}
-                        <p class="mt-1 text-xs text-danger">{{ field.errors|join:", " }}</p>
-                    {% endif %}
-                </div>
-            {% endif %}
-        {% endfor %}
+            </div>
+            {{ form.temp_fahrenheit }}
+            <p class="mt-1 text-xs text-text-secondary" id="temp-help-text">Normal: 97–99°F (36.1–37.2°C)</p>
+            {% if form.temp_fahrenheit.errors %}<p class="mt-1 text-xs text-danger">{{ form.temp_fahrenheit.errors|join:", " }}</p>{% endif %}
+        </div>
+
+        {# Row 4: BUN | GCS Total #}
+        <div>
+            <label for="{{ form.bun.id_for_label }}" class="block text-sm font-medium mb-1">
+                {{ form.bun.label }}
+            </label>
+            {{ form.bun }}
+            <p class="mt-1 text-xs text-text-secondary">{{ form.bun.help_text }}</p>
+            {% if form.bun.errors %}<p class="mt-1 text-xs text-danger">{{ form.bun.errors|join:", " }}</p>{% endif %}
+        </div>
+
+        <div>
+            <label for="{{ form.gcs_total.id_for_label }}" class="block text-sm font-medium mb-1">
+                {{ form.gcs_total.label }}
+            </label>
+            {{ form.gcs_total }}
+            <p class="mt-1 text-xs text-text-secondary">{{ form.gcs_total.help_text }}</p>
+            {% if form.gcs_total.errors %}<p class="mt-1 text-xs text-danger">{{ form.gcs_total.errors|join:", " }}</p>{% endif %}
+        </div>
+
     </div>
 
     <div class="flex items-center justify-between pt-4 border-t border-border">
@@ -54,4 +123,47 @@
         </button>
     </div>
 </form>
+
+<script>
+(function () {
+    var LABELS = {
+        F: { help: 'Normal: 97–99°F (36.1–37.2°C)', placeholder: 'e.g. 98.6' },
+        C: { help: 'Normal: 36.1–37.2°C', placeholder: 'e.g. 37.0' }
+    };
+    var tempInput = document.getElementById('{{ form.temp_fahrenheit.id_for_label }}');
+    var unitInput = document.getElementById('temp_unit_input');
+    var btnF     = document.getElementById('btn-unit-f');
+    var btnC     = document.getElementById('btn-unit-c');
+    var helpEl   = document.getElementById('temp-help-text');
+
+    function setTempUnit(unit) {
+        unitInput.value = unit;
+        helpEl.textContent = LABELS[unit].help;
+        if (tempInput) tempInput.placeholder = LABELS[unit].placeholder;
+
+        var activeClasses   = ['bg-primary', 'text-white'];
+        var inactiveClasses = ['text-text-secondary'];
+
+        if (unit === 'F') {
+            btnF.classList.add(...activeClasses);
+            btnF.classList.remove(...inactiveClasses);
+            btnC.classList.remove(...activeClasses);
+            btnC.classList.add(...inactiveClasses);
+        } else {
+            btnC.classList.add(...activeClasses);
+            btnC.classList.remove(...inactiveClasses);
+            btnF.classList.remove(...activeClasses);
+            btnF.classList.add(...inactiveClasses);
+        }
+    }
+
+    // Expose globally for onclick handlers
+    window.setTempUnit = setTempUnit;
+
+    // Initialise to whatever the form already has (handles back-navigation)
+    document.addEventListener('DOMContentLoaded', function () {
+        setTempUnit(unitInput.value || 'F');
+    });
+})();
+</script>
 {% endblock %}

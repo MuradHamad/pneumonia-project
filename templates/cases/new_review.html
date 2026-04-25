@@ -6,7 +6,7 @@
     <div>
         <h2 class="text-lg font-semibold">Review & Submit</h2>
         <p class="text-sm text-text-secondary mt-1">
-            Confirm details below. Submitting creates a pending case; diagnosis runs next.
+            Confirm details below. Submitting will run the AI diagnosis.
         </p>
     </div>
 
@@ -22,7 +22,7 @@
         </div>
 
         <div>
-            <h3 class="text-xs font-semibold uppercase text-text-secondary mb-2">X-ray</h3>
+            <h3 class="text-xs font-semibold uppercase text-text-secondary mb-2">X-ray Preview</h3>
             <div class="rounded-lg border border-border overflow-hidden bg-background">
                 <img src="{{ xray_url }}" alt="Chest X-ray preview"
                      class="w-full h-56 object-contain bg-black/5" />
@@ -32,17 +32,21 @@
 
     <div>
         <h3 class="text-xs font-semibold uppercase text-text-secondary mb-2">Clinical Data</h3>
-        <dl class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-            <div><dt class="text-text-secondary">Age</dt><dd>{{ clinical.age }}</dd></div>
+        <dl class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div><dt class="text-text-secondary">Age</dt><dd>{{ clinical.age }} yrs</dd></div>
             <div><dt class="text-text-secondary">SpO₂</dt><dd>{{ clinical.spo2 }}%</dd></div>
-            <div><dt class="text-text-secondary">Blood Pressure</dt><dd>{{ clinical.blood_pressure }}</dd></div>
-            <div><dt class="text-text-secondary">Respiratory Rate</dt><dd>{{ clinical.respiratory_rate }}</dd></div>
-            <div><dt class="text-text-secondary">Temperature</dt><dd>{{ clinical.temperature }} °C</dd></div>
-            <div><dt class="text-text-secondary">Urea</dt><dd>{{ clinical.urea }}</dd></div>
-            <div><dt class="text-text-secondary">pH</dt><dd>{{ clinical.ph }}</dd></div>
-            <div><dt class="text-text-secondary">WBC</dt><dd>{{ clinical.wbc_count }}</dd></div>
-            <div><dt class="text-text-secondary">Confusion</dt><dd>{% if clinical.confusion %}Yes{% else %}No{% endif %}</dd></div>
+            <div><dt class="text-text-secondary">Heart Rate</dt><dd>{{ clinical.hr }} bpm</dd></div>
+            <div><dt class="text-text-secondary">Resp. Rate</dt><dd>{{ clinical.rr }} /min</dd></div>
+            <div><dt class="text-text-secondary">Systolic BP</dt><dd>{{ clinical.sys_bp }} mmHg</dd></div>
+            <div><dt class="text-text-secondary">Temperature</dt><dd>{{ clinical.temp_fahrenheit }}°F</dd></div>
+            <div><dt class="text-text-secondary">BUN</dt><dd>{{ clinical.bun }} mg/dL</dd></div>
+            <div><dt class="text-text-secondary">GCS Total</dt><dd>{{ clinical.gcs_total }}</dd></div>
         </dl>
+    </div>
+
+    <div class="rounded-lg bg-primary-light border border-blue-200 px-4 py-3 text-sm text-primary flex items-start gap-2">
+        <i data-lucide="info" class="w-4 h-4 mt-0.5 shrink-0"></i>
+        <span>Submission runs the AI model synchronously. Expect 5–15 seconds on CPU.</span>
     </div>
 
     <form method="post" class="flex items-center justify-between pt-4 border-t border-border">
@@ -53,7 +57,7 @@
         </a>
         <button type="submit"
                 class="inline-flex items-center gap-2 bg-primary text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary-hover">
-            <i data-lucide="check" class="w-4 h-4"></i> Submit Case
+            <i data-lucide="cpu" class="w-4 h-4"></i> Submit for Diagnosis
         </button>
     </form>
 </div>

@@ -5,6 +5,8 @@
 **Layout:** Fixed left sidebar, main content area
 **Language:** English only (LTR)
 
+
+
 ---
 
 ## 1. Design System
@@ -29,13 +31,13 @@
 
 ### 1.2 Severity / Risk Class Colors
 
-| Class | Color | Hex |
-|---|---|---|
-| I (low) | Green | `#16A34A` |
-| II | Lime | `#65A30D` |
-| III | Amber | `#F59E0B` |
-| IV | Orange | `#EA580C` |
-| V (highest) | Red | `#DC2626` |
+| Result | Color | Hex | Usage |
+|---|---|---|---|
+| No pneumonia | Green | `#16A34A` | Success state, all-clear |
+| Pneumonia (non-severe) | Amber | `#F59E0B` | Warning, requires attention |
+| Pneumonia (severe) | Red | `#DC2626` | Critical, urgent clinical action |
+| Failed diagnosis | Gray | `#64748B` | System error state |
+
 
 ### 1.3 Typography
 
@@ -174,12 +176,14 @@ Tailwind default scale. Page padding: `p-6` or `p-8`. Card padding: `p-6`. Gap b
 
 **Row 3 — Recent Cases (table card):**
 - H3: "Recent Cases"
-- Table with columns: Case ID, Patient Name, Risk Class (badge), Status (badge), Created, Actions (View button)
+- Table with columns: Case ID, Patient Name, Diagnosis (result badge), Status (badge), Created, Actions (View button)
 - Limit 10 rows
 - "View all cases" link bottom-right
 
-**Row 4 — Severity Distribution (optional chart card):**
-- Bar chart showing count by risk class (I–V)
+**Row 4 — Diagnosis Distribution (optional chart card):**
+- Three horizontal bars showing counts: No Pneumonia / Pneumonia (non-severe) / Severe Pneumonia
+- Green / amber / red bars matching the result color palette
+- Small label above: "Distribution of completed diagnoses"
 
 ---
 
@@ -237,13 +241,12 @@ Tailwind default scale. Page padding: `p-6` or `p-8`. Card padding: `p-6`. Gap b
 - Full name (H2)
 - National ID, DOB (age), gender, phone
 - Registered by + date
-- "Edit" secondary button, "New Case" primary button
+- "New Case" primary button
 
 **Below — Case History table:**
 - H3: "Case History"
-- Columns: Case ID, Risk Class, Severity Score, Status, Created, Actions (View)
+- Columns: Case ID, Diagnosis (result badge), Severity (probability %), Status, Created, Actions (View)
 - Empty state: "No cases yet for this patient."
-
 ---
 
 ### 3.7 New Case — Step 1 — `/cases/new?patient_id=X`
@@ -264,25 +267,35 @@ Tailwind default scale. Page padding: `p-6` or `p-8`. Card padding: `p-6`. Gap b
 
 ---
 
-### 3.8 New Case — Step 2 — `/cases/new/<case_id>/clinical-data`
+## SECTION 3.8 
 
-**Access:** CLINICIAN
-**Purpose:** Enter clinical measurements
+Step 2 form (new 8-field version):
 
-**Layout:**
-- Step indicator: [1. X-Ray] → **[2. Clinical Data]** → [3. Review]
-- Form card with 2-column grid:
-  - Age (number)
-  - SpO2 (%)
-  - Blood Pressure (text, e.g. "120/80")
-  - Respiratory Rate (breaths/min)
-  - Temperature (°C)
-  - Urea (mmol/L)
-  - pH
-  - WBC Count (×10⁹/L)
-  - Confusion (toggle switch: Yes/No)
-- Helper text under each field with normal ranges
-- Bottom: "Back" + "Next: Review" primary
+**Row 1 (2 cols):**
+- Age (number, years)
+- SpO2 (number, %)
+
+**Row 2 (2 cols):**
+- Heart Rate (bpm)
+- Respiratory Rate (breaths/min)
+
+**Row 3 (2 cols):**
+- Systolic Blood Pressure (mmHg)
+- Temperature (with °C/°F unit toggle — default °F)
+
+**Row 4 (2 cols):**
+- BUN — Blood Urea Nitrogen (mg/dL)
+- GCS Total — Glasgow Coma Scale (3–15 integer)
+
+**Helper text under each field** (normal ranges):
+- Age: patient age in years
+- SpO2: normal 95–100%
+- HR: normal 60–100 bpm
+- RR: normal 12–20 breaths/min
+- SysBP: normal 90–120 mmHg
+- Temp: normal 97–99°F (36.1–37.2°C)
+- BUN: normal 7–20 mg/dL
+- GCS: 15 = normal, 3 = deep coma
 
 ---
 
@@ -301,38 +314,45 @@ Tailwind default scale. Page padding: `p-6` or `p-8`. Card padding: `p-6`. Gap b
 
 ---
 
-### 3.10 Case Detail / Result — `/cases/<id>`
+## SECTION 3.10 
 
-**Access:** CLINICIAN, ADMIN
-**Purpose:** View AI diagnosis output + chat + report actions
+**Diagnosis Result card layout:**
 
-**Layout:**
+**Primary result banner (full width, colored):**
+- If no pneumonia: green banner "No Pneumonia Detected" + small probability %
+- If pneumonia, non-severe: amber banner "Pneumonia Detected — Non-Severe"
+- If pneumonia, severe: red banner "Pneumonia Detected — Severe"
 
-**Top row — Case Header:**
-- Patient name + link to patient
-- Case ID + created date
-- Status badge
+**Two metric tiles side by side:**
+- **Pneumonia Probability** — big number `XX.X%` + horizontal bar
+- **Severity Probability** — big number `XX.X%` + horizontal bar (only meaningful when pneumonia detected; show anyway with note)
 
-**Main content — 2-column layout:**
+**Below the tiles:**
+- Timestamp: "Analyzed on {date}"
+- Model version: "DenseNet121 Multi-Task (MIMIC-CXR)"
 
-**Left column (60%):**
-- **X-Ray + Heatmap card:**
-  - Tabs: "Original" / "Heatmap"
-  - Image viewer
-- **Clinical Data card:**
-  - Read-only key-value grid
+**Actions card (unchanged):**
+- Generate Report button
+- Chat with AI button
 
-**Right column (40%):**
-- **Diagnosis Result card:**
-  - Risk Class (large badge, colored)
-  - Severity Score (large number)
-  - Confidence (progress bar + %)
-  - Timestamp
-- **Actions card:**
-  - "Generate Report" primary button
-  - "Chat with AI" secondary button (opens chat panel)
+**Loading state (status=PENDING):**
+- Unchanged — skeleton + "AI is analyzing..."
 
-**Loading state:** If status = PENDING, show "AI is analyzing..." skeleton loader instead of diagnosis card.
+**Failed state (status=FAILED) — NEW:**
+- Gray banner "Diagnosis Failed"
+- Message: "The AI model could not process this case. Please contact support or try resubmitting."
+- "Retry Diagnosis" button
+
+
+## SECTION 3.10 
+
+Tabs remain: "Original" / "Heatmap"
+
+**Heatmap tab:**
+- Shows the Grad-CAM overlay image (224×224 colorized by intensity)
+- Small legend below: "Red/yellow areas indicate regions most influential to the diagnosis"
+- If `heatmap_path` is null (e.g. failed case): show placeholder "Heatmap not available"
+
 
 ---
 
@@ -379,11 +399,10 @@ Tailwind default scale. Page padding: `p-6` or `p-8`. Card padding: `p-6`. Gap b
 
 **Layout:**
 - Page header: "All Cases" + "New Case" primary button
-- Filters row: search, risk class, status, date range
+- Filters row: search, diagnosis filter (No Pneumonia / Pneumonia / Severe / All), status, date range
 - Table:
-  - Columns: Case ID, Patient, Risk Class, Severity Score, Status, Clinician (admin only), Created, Actions (View)
+  - Columns: Case ID, Patient, Diagnosis (result badge), Severity (probability %), Status, Clinician (admin only), Created, Actions (View)
   - Pagination
-
 ---
 
 ### 3.14 Admin — Clinicians List — `/admin/clinicians`
@@ -436,12 +455,17 @@ Tailwind default scale. Page padding: `p-6` or `p-8`. Card padding: `p-6`. Gap b
 
 ## 4. Reusable Components
 
-### 4.1 Severity Badge
+## SECTION 4.1 
 
-Small pill badge with risk class. Color based on class (see 1.2).
-```
-[ Class III ]   — amber background, white text
-```
+**Result Badge component:**
+
+Small pill badge with three states:
+
+- **No Pneumonia:** green background, check icon, "Healthy"
+- **Pneumonia:** amber background, alert icon, "Pneumonia"
+- **Severe Pneumonia:** red background, warning icon, "Severe"
+
+Used in: case detail result banner, case history tables, dashboard recent cases, report preview.
 
 ### 4.2 Status Badge
 
@@ -450,8 +474,16 @@ Small pill badge with risk class. Color based on class (see 1.2).
 
 ### 4.3 Confidence Meter
 
-Horizontal bar + percentage. Color:
-- <60% red, 60–80% amber, >80% green
+
+Now used for both `diag_probability` and `severity_probability`.
+
+- <50% gray (uncertain)
+- 50–70% amber
+- 70–85% blue
+- >85% green (high confidence)
+
+Label above the bar: "Pneumonia probability" or "Severity probability" (not generic "confidence").
+
 
 ### 4.4 Stat Card
 
@@ -498,3 +530,10 @@ Minimum viable: focus desktop first. Mobile is a nice-to-have.
 - For icons, use Lucide icons via CDN (`lucide-static` or inline SVG)
 - All forms use Django's built-in form rendering + Tailwind classes via `django-widget-tweaks` or manual classes
 - Chat messages should use HTMX for smooth appending without full page reload (optional enhancement)
+
+
+
+From everywhere in `ui-design.md`:
+- Delete any reference to "Risk Class I/II/III/IV/V"
+- Delete any reference to "Severity Score 0.0–1.0" as a single number
+- Delete severity distribution chart buckets I–V (can replace with a two-bucket chart: "Non-severe" / "Severe" among detected pneumonia cases)

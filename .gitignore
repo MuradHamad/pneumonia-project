@@ -30,3 +30,7 @@ db.sqlite3-journal
 # Model artifacts
 *.pt
 *.pth
+models/*.pth
+models/*.pt
+models/*.joblib
+media/heatmaps/

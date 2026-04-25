@@ -3,7 +3,7 @@
 Returns a canned response that references the case so the UI flow
 (prompt in → bot reply saved) works end-to-end before real RAG is wired.
 Phase 12 replaces this with an embedding + LLM implementation; the
-`process_query()` signature will stay the same.
+process_query() signature stays the same.
 """
 from __future__ import annotations
 
@@ -13,16 +13,22 @@ def process_query(query: str, case) -> str:
 
     Args:
         query: Clinician's free-text prompt.
-        case: PatientCase instance (attributes: id, risk_class, severity_score, status).
+        case: PatientCase instance.
 
     Returns:
-        Plain-text reply that at least references the case context.
+        Plain-text reply that references the case context.
     """
-    risk = case.risk_class or "not yet determined"
-    severity = (
-        f"{case.severity_score:.2f}" if case.severity_score is not None else "n/a"
-    )
+    if case.has_pneumonia is True:
+        finding = "Severe pneumonia" if case.is_severe else "Non-severe pneumonia"
+        diag_pct = f"{case.diag_probability * 100:.1f}%" if case.diag_probability is not None else "unknown"
+        context = f"{finding} (probability {diag_pct})"
+    elif case.has_pneumonia is False:
+        diag_pct = f"{case.diag_probability * 100:.1f}%" if case.diag_probability is not None else "unknown"
+        context = f"No pneumonia (probability {diag_pct})"
+    else:
+        context = "pending diagnosis"
+
     return (
-        f"[Placeholder] Based on case #{case.id} (Risk Class {risk}, "
-        f"severity {severity}), here is a response to: \"{query.strip()}\""
+        f"[Placeholder] Based on case #{case.id} ({context}), "
+        f"here is a response to: \"{query.strip()}\""
     )

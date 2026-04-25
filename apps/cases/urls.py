@@ -11,4 +11,5 @@ urlpatterns = [
     path("new/clinical/", views.case_new_clinical, name="new_clinical"),
     path("new/review/", views.case_new_review, name="new_review"),
     path("<int:case_id>/", views.case_detail, name="detail"),
+    path("<int:case_id>/retry/", views.case_retry, name="retry"),
 ]

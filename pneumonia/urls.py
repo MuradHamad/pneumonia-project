@@ -18,10 +18,12 @@ urlpatterns = [
     path("chat/", include("apps.chat.urls")),
     path("reports/", include("apps.reports.urls")),
     path("", dashboard, name="dashboard"),
-    # Catch-all so the custom 404 renders in DEBUG mode too
-    re_path(r"^.*$", lambda req, *a, **kw: page_not_found(req, None)),
 ]
 
+# 1. نعطي الأولوية لعرض صور المريض والتصاميم أولاً!
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.BASE_DIR / "static")
+
+# 2. نضع السطر المفترس (Catch-all) كآخر حارس في النهاية المطلقة!
+urlpatterns.append(re_path(r"^.*$", lambda req, *a, **kw: page_not_found(req, None)))

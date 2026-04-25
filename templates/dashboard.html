@@ -26,7 +26,7 @@
         <div class="flex-1">
             <h3 class="text-lg font-semibold mb-1">Start a new diagnosis</h3>
             <p class="text-sm text-text-secondary">
-                Upload a chest X-ray and clinical measurements to receive an AI-assisted severity assessment.
+                Upload a chest X-ray and clinical measurements to receive an AI-assisted pneumonia assessment.
             </p>
         </div>
         <a href="{% url 'cases:new' %}"
@@ -35,10 +35,10 @@
         </a>
     </div>
 
-    {# ===== Row 3 — Severity distribution ===== #}
+    {# ===== Row 3 — Diagnosis distribution ===== #}
     <div class="bg-surface rounded-xl border border-border shadow-sm p-6">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold">Severity Distribution</h3>
+            <h3 class="text-lg font-semibold">Diagnosis Distribution</h3>
             <span class="text-xs text-text-secondary">
                 {% if severity_total %}{{ severity_total }} completed case{{ severity_total|pluralize }}{% else %}No completed cases{% endif %}
             </span>
@@ -53,7 +53,7 @@
                             <span class="text-text-secondary">{{ row.count }} ({{ row.pct }}%)</span>
                         </div>
                         <div class="w-full h-2 bg-background rounded-full overflow-hidden">
-                            <div class="h-full bg-primary rounded-full" style="width: {{ row.pct }}%"></div>
+                            <div class="h-full rounded-full {{ row.color }}" style="width: {{ row.pct }}%"></div>
                         </div>
                     </div>
                 {% endfor %}
@@ -81,7 +81,7 @@
                     <tr>
                         <th class="text-left px-6 py-3">Case ID</th>
                         <th class="text-left px-6 py-3">Patient</th>
-                        <th class="text-left px-6 py-3">Risk Class</th>
+                        <th class="text-left px-6 py-3">Diagnosis</th>
                         <th class="text-left px-6 py-3">Status</th>
                         <th class="text-left px-6 py-3">Created</th>
                         <th class="text-right px-6 py-3">Actions</th>
@@ -95,10 +95,30 @@
                                 <a href="{% url 'patients:detail' case.patient.id %}"
                                    class="text-primary hover:underline">{{ case.patient.full_name }}</a>
                             </td>
-                            <td class="px-6 py-3">{{ case.get_risk_class_display|default:"—" }}</td>
+                            <td class="px-6 py-3">
+                                {% if case.has_pneumonia is True %}
+                                    {% if case.is_severe %}
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-danger">
+                                            <i data-lucide="alert-triangle" class="w-3 h-3"></i> Severe
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-warning">
+                                            <i data-lucide="alert-circle" class="w-3 h-3"></i> Pneumonia
+                                        </span>
+                                    {% endif %}
+                                {% elif case.has_pneumonia is False %}
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-success">
+                                        <i data-lucide="check-circle-2" class="w-3 h-3"></i> Healthy
+                                    </span>
+                                {% else %}
+                                    <span class="text-text-muted">—</span>
+                                {% endif %}
+                            </td>
                             <td class="px-6 py-3">
                                 {% if case.status == 'DONE' %}
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-success">Done</span>
+                                {% elif case.status == 'FAILED' %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-text-secondary">Failed</span>
                                 {% else %}
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-light text-primary">Pending</span>
                                 {% endif %}
