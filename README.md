@@ -2,7 +2,7 @@
 
 A multi-modal AI web application that assesses pneumonia severity from chest X-rays combined with clinical data (vitals, labs). Clinicians upload cases, receive AI-generated severity scores and heatmaps, chat with an RAG-powered assistant, and export clinical reports.
 
-**Graduation Project (GP2) — University of Petra, Software Engineering — Sadeen Al-Kalili Qais Qasem Murad Hamad**
+**Graduation Project (GP2) — University of Petra,— Sadeen Al-Kalili / Qais Qasem / Murad Hamad**
 
 ---
 
