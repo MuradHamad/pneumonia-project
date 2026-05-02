@@ -7,7 +7,7 @@
     {% if case.status == 'DONE' %}
         <a href="{% url 'reports:preview' case.id %}"
            class="inline-flex items-center gap-2 bg-primary text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary-hover">
-            <i data-lucide="file-check-2" class="w-4 h-4"></i> Report
+            <i data-lucide="file-check-2" class="w-4 h-4"></i> Summary
         </a>
     {% endif %}
 {% endblock %}
@@ -34,7 +34,7 @@
                     <div>
                         <div class="font-semibold text-danger">Pneumonia Detected — Severe</div>
                         <div class="text-sm text-danger/80 mt-0.5">
-                            Analyzed {{ case.created_at|date:"M j, Y H:i" }} · DenseNet121 Multi-Task (MIMIC-CXR)
+                            Analyzed {{ case.created_at|date:"M j, Y H:i" }}
                         </div>
                     </div>
                 </div>
@@ -44,7 +44,7 @@
                     <div>
                         <div class="font-semibold text-warning">Pneumonia Detected — Non-Severe</div>
                         <div class="text-sm text-warning/80 mt-0.5">
-                            Analyzed {{ case.created_at|date:"M j, Y H:i" }} · DenseNet121 Multi-Task (MIMIC-CXR)
+                            Analyzed {{ case.created_at|date:"M j, Y H:i" }}
                         </div>
                     </div>
                 </div>
@@ -54,7 +54,7 @@
                     <div>
                         <div class="font-semibold text-success">No Pneumonia Detected</div>
                         <div class="text-sm text-success/80 mt-0.5">
-                            Analyzed {{ case.created_at|date:"M j, Y H:i" }} · DenseNet121 Multi-Task (MIMIC-CXR)
+                            Analyzed {{ case.created_at|date:"M j, Y H:i" }}
                         </div>
                     </div>
                 </div>
@@ -278,7 +278,7 @@
         });
     }
     window.showTab = showTab;
-    document.addEventListener('DOMContentLoaded', function () { showTab('original'); });
+    document.addEventListener('DOMContentLoaded', function () { showTab('heatmap'); });
 })();
 </script>
 {% endblock %}

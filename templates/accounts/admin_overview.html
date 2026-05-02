@@ -17,7 +17,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {% include "_components/stat_card.html" with icon="clock" label="Pending Diagnoses" value=stats.pending tone="warning" %}
         {% include "_components/stat_card.html" with icon="check-circle" label="Completed Diagnoses" value=stats.done tone="success" %}
-        {% include "_components/stat_card.html" with icon="file-check-2" label="Generated Reports" value=stats.reports tone="primary" %}
+        {% include "_components/stat_card.html" with icon="file-check-2" label="Generated Summaries" value=stats.reports tone="primary" %}
     </div>
 
     {# ===== Recent activity ===== #}

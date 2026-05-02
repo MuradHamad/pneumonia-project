@@ -1,7 +1,8 @@
-"""Report builder — composes factual content from case + clinical + AI output.
+"""Summary builder — composes factual content from case + clinical + AI output.
 
-No clinical recommendations or thresholds. Reports echo stored values only.
+No clinical recommendations or thresholds. Summaries echo stored values only.
 """
+
 from __future__ import annotations
 
 from typing import TypedDict
@@ -19,17 +20,19 @@ PLACEHOLDER_MEDS = (
 
 
 def build_content(case) -> ReportContent:
-    """Compose the textual body of a report for a given PatientCase."""
+    """Compose the textual body of a summary for a given PatientCase."""
     patient = case.patient
     cd = case.clinical_data
 
     diag_pct = (
         f"{case.diag_probability * 100:.1f}%"
-        if case.diag_probability is not None else "N/A"
+        if case.diag_probability is not None
+        else "N/A"
     )
     sev_pct = (
         f"{case.severity_probability * 100:.1f}%"
-        if case.severity_probability is not None else "N/A"
+        if case.severity_probability is not None
+        else "N/A"
     )
 
     if case.has_pneumonia is True:
@@ -45,7 +48,8 @@ def build_content(case) -> ReportContent:
 
     temp_c = (
         f"{(cd.temp_fahrenheit - 32) * 5 / 9:.1f}°C / {cd.temp_fahrenheit:.1f}°F"
-        if cd.temp_fahrenheit is not None else "N/A"
+        if cd.temp_fahrenheit is not None
+        else "N/A"
     )
 
     simplified = (

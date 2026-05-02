@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}Report — Case #{{ case.id }} — PneuDx{% endblock %}
-{% block page_title %}Report — Case #{{ case.id }}{% endblock %}
+{% block title %}Summary — Case #{{ case.id }} — PneuDx{% endblock %}
+{% block page_title %}Summary — Case #{{ case.id }}{% endblock %}
 
 {% block page_actions %}
     <a href="{% url 'cases:detail' case.id %}"
@@ -16,20 +16,20 @@
         <span class="mx-1">/</span>
         <a href="{% url 'cases:detail' case.id %}" class="hover:text-primary">Case #{{ case.id }}</a>
         <span class="mx-1">/</span>
-        <span>Report</span>
+        <span>Summary</span>
     </nav>
 
     {# ===== Status bar ===== #}
     <div class="bg-surface rounded-xl border border-border p-6 shadow-sm flex items-center justify-between gap-4 flex-wrap">
         <div>
             <h2 class="text-lg font-semibold">
-                {% if report %}Report Generated{% else %}Report Draft{% endif %}
+                {% if report %}Summary Saved{% else %}Summary Draft{% endif %}
             </h2>
             <p class="text-sm text-text-secondary mt-1">
                 {% if report %}
                     Last saved {{ report.generated_at|date:"M j, Y H:i" }} ({{ report.get_format_display }})
                 {% else %}
-                    A report has not been saved yet. Review the draft below, then generate.
+                    A summary has not been saved yet. Review the draft below, then generate.
                 {% endif %}
             </p>
         </div>
@@ -53,12 +53,53 @@
                     </select>
                     <button type="submit"
                             class="inline-flex items-center gap-2 bg-primary text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary-hover">
-                        <i data-lucide="file-check-2" class="w-4 h-4"></i> Generate Report
+                        <i data-lucide="file-check-2" class="w-4 h-4"></i> Generate Summary
                     </button>
                 </form>
             {% endif %}
         </div>
     </div>
+
+    {# ===== X-ray images ===== #}
+    {% if case.xray_image or case.heatmap_path %}
+    <div class="bg-surface rounded-xl border border-border p-6 shadow-sm">
+        <div class="flex items-center gap-2 mb-4" id="image-tabs">
+            {% if case.xray_image %}
+                <button type="button" onclick="showTab('original')"
+                        id="tab-original"
+                        class="text-sm font-medium px-3 py-1.5 rounded-lg transition-colors text-text-secondary hover:bg-background">
+                    Original X-Ray
+                </button>
+            {% endif %}
+            {% if case.heatmap_path %}
+                <button type="button" onclick="showTab('heatmap')"
+                        id="tab-heatmap"
+                        class="text-sm font-medium px-3 py-1.5 rounded-lg transition-colors">
+                    AI Focus (Heatmap)
+                </button>
+            {% endif %}
+        </div>
+
+        {% if case.xray_image %}
+            <div id="panel-original" class="hidden rounded-lg border border-border overflow-hidden bg-black/5">
+                <img src="{{ case.xray_image.url }}" alt="Chest X-ray"
+                     class="w-full h-80 object-contain" />
+            </div>
+        {% endif %}
+
+        {% if case.heatmap_path %}
+            <div id="panel-heatmap" class="rounded-lg border border-border overflow-hidden bg-black/5">
+                <img src="{{ MEDIA_URL }}{{ case.heatmap_path }}" alt="Grad-CAM heatmap overlay"
+                     class="w-full h-80 object-contain" />
+            </div>
+            <p class="mt-2 text-xs text-text-secondary">
+                Red/yellow areas indicate regions most influential to the diagnosis.
+            </p>
+        {% elif case.status == 'DONE' %}
+            <p class="mt-2 text-xs text-text-muted">Heatmap not available for this case.</p>
+        {% endif %}
+    </div>
+    {% endif %}
 
     {# ===== Draft body ===== #}
     <div class="bg-surface rounded-xl border border-border p-6 shadow-sm">
@@ -82,4 +123,31 @@
         </form>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    function showTab(tab) {
+        var panels = { original: document.getElementById('panel-original'), heatmap: document.getElementById('panel-heatmap') };
+        var tabs   = { original: document.getElementById('tab-original'),   heatmap: document.getElementById('tab-heatmap') };
+        Object.keys(panels).forEach(function (k) {
+            if (!panels[k]) return;
+            panels[k].classList.toggle('hidden', k !== tab);
+        });
+        Object.keys(tabs).forEach(function (k) {
+            if (!tabs[k]) return;
+            if (k === tab) {
+                tabs[k].classList.add('bg-primary-light', 'text-primary');
+                tabs[k].classList.remove('text-text-secondary', 'hover:bg-background');
+            } else {
+                tabs[k].classList.remove('bg-primary-light', 'text-primary');
+                tabs[k].classList.add('text-text-secondary', 'hover:bg-background');
+            }
+        });
+    }
+    window.showTab = showTab;
+    document.addEventListener('DOMContentLoaded', function () { showTab('heatmap'); });
+})();
+</script>
 {% endblock %}

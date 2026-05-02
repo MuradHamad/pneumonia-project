@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Reports — PneuDx{% endblock %}
-{% block page_title %}Reports{% endblock %}
+{% block title %}Summaries — PneuDx{% endblock %}
+{% block page_title %}Summaries{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
     <div class="bg-surface rounded-xl border border-border shadow-sm">
         <div class="px-6 py-4 border-b border-border">
-            <h3 class="text-lg font-semibold">{{ reports|length }} generated report{{ reports|length|pluralize }}</h3>
+            <h3 class="text-lg font-semibold">{{ reports|length }} generated summary{{ reports|length|pluralize }}</h3>
         </div>
 
         <div class="overflow-x-auto">
@@ -40,7 +40,7 @@
                                 <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-background text-text-muted mb-2">
                                     <i data-lucide="file-text" class="w-5 h-5"></i>
                                 </div>
-                                <div class="text-sm">No reports generated yet.</div>
+                                <div class="text-sm">No summaries generated yet.</div>
                             </td>
                         </tr>
                     {% endfor %}

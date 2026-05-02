@@ -2,12 +2,13 @@
 
 {% block wizard_body %}
 <form method="post" enctype="multipart/form-data"
-      class="bg-surface rounded-xl border border-border p-6 shadow-sm space-y-6">
+      class="bg-surface rounded-xl border border-border p-6 shadow-sm space-y-6"
+      id="xray-form">
     {% csrf_token %}
 
     <div>
         <h2 class="text-lg font-semibold">Upload Chest X-ray</h2>
-        <p class="text-sm text-text-secondary mt-1">JPEG, PNG, or WEBP. Max 10 MB.</p>
+        <p class="text-sm text-text-secondary mt-1">JPG, JPEG, PNG. Max 10 MB.</p>
     </div>
 
     <div>
@@ -15,6 +16,7 @@
             {{ form.xray_image.label }}
         </label>
         {{ form.xray_image }}
+        <p id="xray-error" class="mt-1 text-xs text-danger hidden"></p>
         {% if form.xray_image.errors %}
             <p class="mt-1 text-xs text-danger">{{ form.xray_image.errors|join:", " }}</p>
         {% endif %}

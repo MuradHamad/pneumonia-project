@@ -1,4 +1,5 @@
 """Patient views — list, register, detail."""
+
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -28,12 +29,16 @@ def patient_list(request):
     paginator = Paginator(patients, 25)
     page_obj = paginator.get_page(request.GET.get("page"))
 
-    return render(request, "patients/list.html", {
-        "page_obj": page_obj,
-        "q": query,
-        "gender_filter": gender,
-        "genders": Patient.GENDER_CHOICES,
-    })
+    return render(
+        request,
+        "patients/list.html",
+        {
+            "page_obj": page_obj,
+            "q": query,
+            "gender_filter": gender,
+            "genders": Patient.GENDER_CHOICES,
+        },
+    )
 
 
 @clinician_required
@@ -64,6 +69,25 @@ def patient_new(request):
 @clinician_required
 def patient_detail(request, patient_id: int):
     """Patient info card + case history table."""
-    patient = get_object_or_404(Patient.objects.select_related("registered_by"), pk=patient_id)
+    patient = get_object_or_404(
+        Patient.objects.select_related("registered_by"), pk=patient_id
+    )
     cases = patient.cases.select_related("clinician").order_by("-created_at")
     return render(request, "patients/detail.html", {"patient": patient, "cases": cases})
+
+
+@clinician_required
+def patient_edit(request, patient_id: int):
+    """Edit an existing patient's information."""
+    patient = get_object_or_404(Patient, pk=patient_id)
+
+    if request.method == "POST":
+        form = PatientForm(request.POST, instance=patient)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Patient {patient.full_name} updated.")
+            return redirect("patients:detail", patient_id=patient.id)
+    else:
+        form = PatientForm(instance=patient)
+
+    return render(request, "patients/edit.html", {"form": form, "patient": patient})

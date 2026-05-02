@@ -97,6 +97,7 @@ def case_list(request):
         cases = cases.filter(
             Q(patient__full_name__icontains=query)
             | Q(patient__national_id__icontains=query)
+            | Q(patient__phone_number__icontains=query)
         )
 
     paginator = Paginator(cases, 25)
@@ -148,7 +149,7 @@ def case_new(request):
     """Step 1: upload X-ray. Persist temp file path + patient_id in session."""
     patient = _resolve_patient(request)
     if patient is None:
-        messages.error(request, "Select a patient before starting a case.")
+        messages.warning(request, "Select a patient before starting a case.")
         return redirect("patients:list")
 
     if request.method == "POST":

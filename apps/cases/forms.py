@@ -1,4 +1,5 @@
 """Forms for the 3-step case creation wizard."""
+
 from django import forms
 from django.core.exceptions import ValidationError
 
@@ -9,14 +10,23 @@ INPUT_CLASSES = (
     "focus:border-primary focus:ring-2 focus:ring-primary-light focus:outline-none"
 )
 
-ALLOWED_XRAY_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
-ALLOWED_XRAY_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp")
+ALLOWED_XRAY_CONTENT_TYPES = {"image/jpeg", "image/png"}
+ALLOWED_XRAY_EXTENSIONS = (".jpg", ".jpeg", ".png")
 MAX_XRAY_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
 
 # Model fields that map 1-to-1 with ClinicalData columns.
-CLINICAL_MODEL_FIELDS = frozenset([
-    "age", "bun", "hr", "sys_bp", "rr", "temp_fahrenheit", "spo2", "gcs_total",
-])
+CLINICAL_MODEL_FIELDS = frozenset(
+    [
+        "age",
+        "bun",
+        "hr",
+        "sys_bp",
+        "rr",
+        "temp_fahrenheit",
+        "spo2",
+        "gcs_total",
+    ]
+)
 
 
 class XrayUploadForm(forms.Form):
@@ -24,10 +34,12 @@ class XrayUploadForm(forms.Form):
 
     xray_image = forms.ImageField(
         label="Chest X-ray",
-        widget=forms.ClearableFileInput(attrs={
-            "class": INPUT_CLASSES,
-            "accept": ",".join(ALLOWED_XRAY_EXTENSIONS),
-        }),
+        widget=forms.ClearableFileInput(
+            attrs={
+                "class": INPUT_CLASSES,
+                "accept": ",".join(ALLOWED_XRAY_EXTENSIONS),
+            }
+        ),
     )
 
     def clean_xray_image(self):
@@ -37,9 +49,9 @@ class XrayUploadForm(forms.Form):
         content_type = getattr(f, "content_type", "") or ""
         name = (f.name or "").lower()
         if content_type and content_type not in ALLOWED_XRAY_CONTENT_TYPES:
-            raise ValidationError("Unsupported file type. Use JPEG, PNG, or WEBP.")
+            raise ValidationError("Unsupported file type. Use JPEG, PNG.")
         if not name.endswith(ALLOWED_XRAY_EXTENSIONS):
-            raise ValidationError("Unsupported extension. Use .jpg, .jpeg, .png, or .webp.")
+            raise ValidationError("Unsupported extension. Use .jpg, .jpeg, or .png.")
         return f
 
 
@@ -69,7 +81,16 @@ class ClinicalDataForm(forms.ModelForm):
 
     class Meta:
         model = ClinicalData
-        fields = ["age", "spo2", "hr", "rr", "sys_bp", "temp_fahrenheit", "bun", "gcs_total"]
+        fields = [
+            "age",
+            "spo2",
+            "hr",
+            "rr",
+            "sys_bp",
+            "temp_fahrenheit",
+            "bun",
+            "gcs_total",
+        ]
         labels = {
             "age": "Age (years)",
             "spo2": "SpO₂ (%)",
@@ -119,7 +140,9 @@ class ClinicalDataForm(forms.ModelForm):
     def clean_rr(self) -> int:
         v = self.cleaned_data["rr"]
         if not (4 <= v <= 80):
-            raise ValidationError("Respiratory rate must be between 4 and 80 breaths/min.")
+            raise ValidationError(
+                "Respiratory rate must be between 4 and 80 breaths/min."
+            )
         return v
 
     def clean_sys_bp(self) -> int:
