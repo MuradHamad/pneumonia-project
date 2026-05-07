@@ -3,7 +3,7 @@ import logging
 import traceback
 import uuid
 from pathlib import Path
-
+from django.db import transaction
 from django.conf import settings
 from django.contrib import messages
 from django.core.files.storage import default_storage
@@ -135,7 +135,6 @@ def case_retry(request, case_id: int):
         messages.error(request, "Case is not in a failed state.")
         return redirect("cases:detail", case_id=case.id)
     case.status = PatientCase.STATUS_PENDING
-    case.save(update_fields=["status"])
     _run_diagnosis(case)
     if case.status == PatientCase.STATUS_DONE:
         messages.success(request, f"Retry successful — case #{case.id} diagnosed.")
@@ -229,17 +228,18 @@ def case_new_review(request):
         return redirect("cases:new")
 
     if request.method == "POST":
-        clinical_data = ClinicalData.objects.create(**clinical)
-        case = PatientCase(
-            patient=patient,
-            clinician=request.user,
-            clinical_data=clinical_data,
-            status=PatientCase.STATUS_PENDING,
-        )
-        final_name = Path(xray_temp).name
-        with default_storage.open(xray_temp, "rb") as src:
-            case.xray_image.save(final_name, src, save=False)
-        case.save()
+        with transaction.atomic():
+            clinical_data = ClinicalData.objects.create(**clinical)
+            case = PatientCase(
+                patient=patient,
+                clinician=request.user,
+                clinical_data=clinical_data,
+                status=PatientCase.STATUS_PENDING,
+            )
+            final_name = Path(xray_temp).name
+            with default_storage.open(xray_temp, "rb") as src:
+                case.xray_image.save(final_name, src, save=False)
+            case.save()
         if default_storage.exists(xray_temp):
             default_storage.delete(xray_temp)
 

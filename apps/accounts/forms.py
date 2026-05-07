@@ -1,6 +1,7 @@
 """Auth forms."""
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
+from sympy import true
 
 from .models import User
 
@@ -56,7 +57,7 @@ class ClinicianCreateForm(forms.ModelForm):
             field.widget.attrs.setdefault("class", INPUT_CLASSES)
         self.fields["email"].required = True
         self.fields["name"].required = True
-
+    
     def clean_email(self) -> str:
         email = (self.cleaned_data.get("email") or "").strip().lower()
         if User.objects.filter(email__iexact=email).exists():

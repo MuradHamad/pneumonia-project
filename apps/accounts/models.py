@@ -45,7 +45,6 @@ class User(AbstractUser):
         (ROLE_ADMIN, "Admin"),
         (ROLE_CLINICIAN, "Clinician"),
     ]
-
     username = None
     first_name = None
     last_name = None

@@ -118,6 +118,8 @@ class ClinicalDataForm(forms.ModelForm):
             if name == "temp_unit":
                 continue
             field.widget.attrs.setdefault("class", INPUT_CLASSES)
+            if name == "bun":
+                field.widget.attrs.setdefault("step", "0.1")
 
     def clean_age(self) -> int:
         v = self.cleaned_data["age"]
@@ -163,6 +165,15 @@ class ClinicalDataForm(forms.ModelForm):
             raise ValidationError("GCS Total must be between 3 and 15.")
         return v
 
+    def clean_temp_fahrenheit(self) -> float:
+        v = self.cleaned_data.get("temp_fahrenheit")
+        if v is None:
+            return None
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            raise ValidationError("Enter a valid temperature value.")
+
     def clean(self):
         cleaned = super().clean()
         temp = cleaned.get("temp_fahrenheit")
@@ -171,9 +182,9 @@ class ClinicalDataForm(forms.ModelForm):
             if unit == self.TEMP_CELSIUS:
                 cleaned["temp_fahrenheit"] = round(temp * 9 / 5 + 32, 2)
             final_f = cleaned["temp_fahrenheit"]
-            if not (80.0 <= final_f <= 115.0):
+            if not (50.0 <= final_f <= 115.0):
                 self.add_error(
                     "temp_fahrenheit",
-                    "Temperature out of plausible range (80–115°F / 27–46°C).",
+                    "Temperature out of plausible range (50–115°F / 10–46°C).",
                 )
         return cleaned

@@ -83,7 +83,8 @@
         {% if case.xray_image %}
             <div id="panel-original" class="hidden rounded-lg border border-border overflow-hidden bg-black/5">
                 <img src="{{ case.xray_image.url }}" alt="Chest X-ray"
-                     class="w-full h-80 object-contain" />
+                     class="w-full h-80 object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                     onclick="openLightbox(this.src)" />
             </div>
         {% endif %}
 

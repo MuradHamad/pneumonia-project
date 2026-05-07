@@ -1,4 +1,5 @@
 """Project-level views (dashboard + error handlers)."""
+
 from datetime import timedelta
 
 from django.shortcuts import render
@@ -26,16 +27,18 @@ def dashboard(request):
         "patients": Patient.objects.count(),
         "cases": PatientCase.objects.count(),
         "cases_this_week": PatientCase.objects.filter(created_at__gte=week_ago).count(),
-        "pending": PatientCase.objects.filter(status=PatientCase.STATUS_PENDING).count(),
+        "pending": PatientCase.objects.filter(
+            status=PatientCase.STATUS_PENDING
+        ).count(),
     }
 
-    recent_cases = (
-        PatientCase.objects
-        .select_related("patient")
-        .order_by("-created_at")[:5]
-    )
+    recent_cases = PatientCase.objects.select_related("patient").order_by(
+        "-created_at"
+    )[:5]
 
-    done_qs = PatientCase.objects.filter(status=PatientCase.STATUS_DONE)
+    done_qs = PatientCase.objects.filter(
+        status=PatientCase.STATUS_DONE, created_at__gte=week_ago
+    )
     no_pneu = done_qs.filter(has_pneumonia=False).count()
     pneu_mild = done_qs.filter(has_pneumonia=True, is_severe=False).count()
     pneu_severe = done_qs.filter(has_pneumonia=True, is_severe=True).count()
@@ -45,14 +48,33 @@ def dashboard(request):
         return round(n / total_done * 100, 1) if total_done else 0
 
     severity_distribution = [
-        {"label": "No Pneumonia",           "count": no_pneu,    "pct": _pct(no_pneu),    "color": "bg-success"},
-        {"label": "Pneumonia (non-severe)", "count": pneu_mild,  "pct": _pct(pneu_mild),  "color": "bg-warning"},
-        {"label": "Pneumonia (severe)",     "count": pneu_severe, "pct": _pct(pneu_severe), "color": "bg-danger"},
+        {
+            "label": "No Pneumonia",
+            "count": no_pneu,
+            "pct": _pct(no_pneu),
+            "color": "bg-success",
+        },
+        {
+            "label": "Pneumonia (non-severe)",
+            "count": pneu_mild,
+            "pct": _pct(pneu_mild),
+            "color": "bg-warning",
+        },
+        {
+            "label": "Pneumonia (severe)",
+            "count": pneu_severe,
+            "pct": _pct(pneu_severe),
+            "color": "bg-danger",
+        },
     ]
 
-    return render(request, "dashboard.html", {
-        "stats": stats,
-        "recent_cases": recent_cases,
-        "severity_distribution": severity_distribution,
-        "severity_total": total_done,
-    })
+    return render(
+        request,
+        "dashboard.html",
+        {
+            "stats": stats,
+            "recent_cases": recent_cases,
+            "severity_distribution": severity_distribution,
+            "severity_total": total_done,
+        },
+    )
